@@ -1,6 +1,13 @@
-import React from 'react'
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const Home = ({ onLoginClick }: { onLoginClick: () => void }) => {
+const Home = () => {
+    const navigate = useNavigate(); // Hook para la redirección
+
+    const handleLoginClick = () => {
+        navigate('/login'); // Redirigir a la página de login
+    };
+
     return (
         <div className="home">
             <header className="home-header">
@@ -9,12 +16,12 @@ const Home = ({ onLoginClick }: { onLoginClick: () => void }) => {
                     Nuestra escuela se dedica a proporcionar una educación de calidad y
                     fomentar el crecimiento personal y académico de nuestros estudiantes.
                 </p>
-                <button onClick={onLoginClick} className="login-button">
+                <button onClick={handleLoginClick} className="login-button">
                     Iniciar Sesión
                 </button>
             </header>
         </div>
-    )
-}
+    );
+};
 
-export default Home
+export default Home;

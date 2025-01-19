@@ -1,12 +1,14 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Necesitamos React Router para la navegación
 
 const LogIn = () => {
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [loginMessage, setLoginMessage] = useState('')
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loginMessage, setLoginMessage] = useState('');
+    const navigate = useNavigate(); // Hook para redirigir al usuario
 
     const handleLogin = async (e: React.FormEvent) => {
-        e.preventDefault()
+        e.preventDefault();
         try {
             const response = await fetch('http://localhost:5024/api/Auth/login', {
                 method: 'POST',
@@ -14,13 +16,33 @@ const LogIn = () => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ email, password }),
-            })
-            const data = await response.json()
-            setLoginMessage(data.message)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+
+                // Guardar el token JWT y el tipo de usuario en el almacenamiento local
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('userType', data.userType);
+
+                // Redirigir al usuario a la página correspondiente según su tipo
+                if (data.userType === 'Admin') {
+                    navigate('/admin');
+                } else if (data.userType === 'Professor') {
+                    navigate('/professor');
+                } else if (data.userType === 'Student') {
+                    navigate('/student');
+                } else {
+                    setLoginMessage('Invalid user type.');
+                }
+            } else {
+                const errorData = await response.json();
+                setLoginMessage(errorData.message || 'Invalid login credentials');
+            }
         } catch (error) {
-            setLoginMessage('Error connecting to the server')
+            setLoginMessage('Error connecting to the server');
         }
-    }
+    };
 
     return (
         <div>
@@ -48,7 +70,7 @@ const LogIn = () => {
             </form>
             {loginMessage && <p>{loginMessage}</p>}
         </div>
-    )
-}
+    );
+};
 
-export default LogIn
+export default LogIn;
