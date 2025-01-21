@@ -10,6 +10,15 @@ const AdminPage = () => {
         age: '',
         grade: '',
     });
+    const [assignmentData, setAssignmentData] = useState({
+        name: '',
+        studyProgram: '',
+        email: '',
+    });
+    const [teachData, setTeachData] = useState({
+        email: '',
+        assignmentName: '',
+    });
     const [errorMessage, setErrorMessage] = useState(''); // Estado para manejar el mensaje de error
 
     const handleUserTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -29,6 +38,16 @@ const AdminPage = () => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
         setErrorMessage(''); // Limpiar mensaje de error al escribir en los campos
+    };
+
+    const handleAssignmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setAssignmentData({ ...assignmentData, [name]: value });
+    };
+
+    const handleTeachChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setTeachData({ ...teachData, [name]: value });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -81,10 +100,71 @@ const AdminPage = () => {
         }
     };
 
+    const handleAssignmentSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const endpoint = 'http://localhost:5024/api/Assignment/add-with-email';
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(assignmentData),
+            });
+
+            if (response.ok) {
+                alert('Asignatura añadida exitosamente.');
+                setAssignmentData({
+                    name: '',
+                    studyProgram: '',
+                    email: '',
+                });
+            } else {
+                const errorData = await response.json();
+                setErrorMessage(errorData.message || 'Error al añadir la asignatura.');
+            }
+        } catch (error) {
+            console.error('Error al conectar con el servidor:', error);
+            setErrorMessage('Hubo un problema con la conexión al servidor.');
+        }
+    };
+
+    const handleTeachSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const endpoint = 'http://localhost:5024/api/Teach/add-with-email-and-assignment';
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(teachData),
+            });
+
+            if (response.ok) {
+                alert('Teach añadido exitosamente.');
+                setTeachData({
+                    email: '',
+                    assignmentName: '',
+                });
+            } else {
+                const errorData = await response.json();
+                setErrorMessage(errorData.message || 'Error al añadir Teach.');
+            }
+        } catch (error) {
+            console.error('Error al conectar con el servidor:', error);
+            setErrorMessage('Hubo un problema con la conexión al servidor.');
+        }
+    };
+
+
     return (
         <div>
             <h1>Admin Dashboard</h1>
             <p>Bienvenido al panel de administración.</p>
+            {/* Formulario para usuarios */}
             <form onSubmit={handleSubmit}>
                 <div>
                     <label>Tipo de Usuario:</label>
@@ -160,9 +240,72 @@ const AdminPage = () => {
                         </div>
                     </>
                 )}
-                {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>} {/* Mostrar el error en la página */}
+                {/* {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>} Mostrar el error en la página */}
                 <button type="submit">Agregar Usuario</button>
             </form>
+
+            {/* Formulario para asignaturas */}
+            <form onSubmit={handleAssignmentSubmit}>
+                <h2>Añadir Asignatura</h2>
+                <div>
+                    <label>Nombre de la Asignatura:</label>
+                    <input
+                        type="text"
+                        name="name"
+                        value={assignmentData.name}
+                        onChange={handleAssignmentChange}
+                        required
+                    />
+                </div>
+                <div>
+                    <label>Programa de Estudio:</label>
+                    <input
+                        type="text"
+                        name="studyProgram"
+                        value={assignmentData.studyProgram}
+                        onChange={handleAssignmentChange}
+                        required
+                    />
+                </div>
+                <div>
+                    <label>Email del Profesor:</label>
+                    <input
+                        type="email"
+                        name="email"
+                        value={assignmentData.email}
+                        onChange={handleAssignmentChange}
+                        required
+                    />
+                </div>
+                <button type="submit">Agregar Asignatura</button>
+            </form>
+
+            <form onSubmit={handleTeachSubmit}>
+                <h2>Asignar Profesor a Asignatura</h2>
+                <div>
+                    <label>Email del Profesor:</label>
+                    <input
+                        type="email"
+                        name="email"
+                        value={teachData.email}
+                        onChange={handleTeachChange}
+                        required
+                    />
+                </div>
+                <div>
+                    <label>Nombre de la Asignatura:</label>
+                    <input
+                        type="text"
+                        name="assignmentName"
+                        value={teachData.assignmentName}
+                        onChange={handleTeachChange}
+                        required
+                    />
+                </div>
+                <button type="submit">Asignar Teach</button>
+            </form>
+
+            {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
         </div>
     );
 };
