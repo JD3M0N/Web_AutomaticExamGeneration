@@ -19,6 +19,14 @@ const AdminPage = () => {
         email: '',
         assignmentName: '',
     });
+    const [topicData, setTopicData] = useState({
+        name: '',
+    });
+    const [ownData, setOwnData] = useState({
+        assignmentName: '',
+        topicName: '',
+    });
+
     const [errorMessage, setErrorMessage] = useState(''); // Estado para manejar el mensaje de error
 
     const handleUserTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -48,6 +56,16 @@ const AdminPage = () => {
     const handleTeachChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setTeachData({ ...teachData, [name]: value });
+    };
+
+    const handleTopicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setTopicData({ ...topicData, [name]: value });
+    };
+
+    const handleOwnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setOwnData({ ...ownData, [name]: value });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -152,6 +170,61 @@ const AdminPage = () => {
             } else {
                 const errorData = await response.json();
                 setErrorMessage(errorData.message || 'Error al añadir Teach.');
+            }
+        } catch (error) {
+            console.error('Error al conectar con el servidor:', error);
+            setErrorMessage('Hubo un problema con la conexión al servidor.');
+        }
+    };
+
+    const handleTopicSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const endpoint = 'http://localhost:5024/api/Topic';
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(topicData.name),
+            });
+
+            if (response.ok) {
+                alert('Topic añadido exitosamente.');
+                setTopicData({ name: '' });
+            } else {
+                const errorData = await response.json();
+                setErrorMessage(errorData.message || 'Error al añadir el topic.');
+            }
+        } catch (error) {
+            console.error('Error al conectar con el servidor:', error);
+            setErrorMessage('Hubo un problema con la conexión al servidor.');
+        }
+    };
+
+    const handleOwnSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const endpoint = 'http://localhost:5024/api/Own/add-by-names';
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(ownData),
+            });
+
+            if (response.ok) {
+                alert('Relación entre asignatura y tema añadida exitosamente.');
+                setOwnData({
+                    assignmentName: '',
+                    topicName: '',
+                });
+            } else {
+                const errorData = await response.json();
+                setErrorMessage(errorData.message || 'Error al añadir la relación.');
             }
         } catch (error) {
             console.error('Error al conectar con el servidor:', error);
@@ -304,6 +377,47 @@ const AdminPage = () => {
                 </div>
                 <button type="submit">Asignar Teach</button>
             </form>
+
+            <form onSubmit={handleTopicSubmit}>
+                <h2>Añadir Topic</h2>
+                <div>
+                    <label>Nombre del Topic:</label>
+                    <input
+                        type="text"
+                        name="name"
+                        value={topicData.name}
+                        onChange={handleTopicChange}
+                        required
+                    />
+                </div>
+                <button type="submit">Agregar Topic</button>
+            </form>
+
+            <form onSubmit={handleOwnSubmit}>
+                <h2>Relacionar Asignatura con Tema</h2>
+                <div>
+                    <label>Nombre de la Asignatura:</label>
+                    <input
+                        type="text"
+                        name="assignmentName"
+                        value={ownData.assignmentName}
+                        onChange={handleOwnChange}
+                        required
+                    />
+                </div>
+                <div>
+                    <label>Nombre del Tema:</label>
+                    <input
+                        type="text"
+                        name="topicName"
+                        value={ownData.topicName}
+                        onChange={handleOwnChange}
+                        required
+                    />
+                </div>
+                <button type="submit">Relacionar</button>
+            </form>
+
 
             {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
         </div>
