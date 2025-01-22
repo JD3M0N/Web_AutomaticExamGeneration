@@ -1,14 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode';
+
 
 const ProfessorPage = () => {
     const [showForm, setShowForm] = useState(false);
+    const [professorId, setProfessorId] = useState<number | null>(null); // Estado para almacenar el ID del profesor
     const [formData, setFormData] = useState({
         difficulty: '',
         type: '',
         questionText: '',
         topicId: '',
-        professorId: '',
     });
+
+    // Decodificar el token y obtener el professorId
+    useEffect(() => {
+        try {
+            const token = localStorage.getItem('token'); // Cambia si usas otro almacenamiento
+            if (token) {
+                const decoded: any = jwtDecode(token);               // Decodifica el token
+                if (decoded.professorId) {
+                    setProfessorId(decoded.professorId); // Extrae el professorId
+                } else {
+                    console.error('El token no contiene professorId.');
+                    alert('No se pudo obtener la información del profesor. Por favor, inicia sesión nuevamente.');
+                }
+            } else {
+                console.error('No se encontró ningún token en localStorage.');
+                alert('Por favor, inicia sesión para continuar.');
+            }
+        } catch (error) {
+            console.error('Error al decodificar el token:', error);
+            alert('Hubo un error al procesar tu sesión. Por favor, inicia sesión nuevamente.');
+        }
+    }, []);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -21,18 +45,24 @@ const ProfessorPage = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (!professorId) {
+            alert('No se pudo identificar al profesor. Por favor, inicie sesión nuevamente.');
+            return;
+        }
+
         try {
             const response = await fetch('http://localhost:5024/api/Question', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`, // Envía el token en el encabezado
                 },
                 body: JSON.stringify({
                     difficulty: parseInt(formData.difficulty),
                     type: formData.type,
                     questionText: formData.questionText,
                     topicId: parseInt(formData.topicId),
-                    professorId: parseInt(formData.professorId),
+                    professorId: professorId, // Usa el ID del profesor extraído del token
                 }),
             });
 
@@ -49,7 +79,6 @@ const ProfessorPage = () => {
                 type: '',
                 questionText: '',
                 topicId: '',
-                professorId: '',
             });
         } catch (error) {
             console.error('Error al enviar la pregunta:', error);
@@ -103,17 +132,6 @@ const ProfessorPage = () => {
                                 type="number"
                                 name="topicId"
                                 value={formData.topicId}
-                                onChange={handleInputChange}
-                                required
-                            />
-                        </label>
-                        <br />
-                        <label>
-                            ID del Profesor:
-                            <input
-                                type="number"
-                                name="professorId"
-                                value={formData.professorId}
                                 onChange={handleInputChange}
                                 required
                             />
