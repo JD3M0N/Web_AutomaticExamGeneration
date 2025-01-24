@@ -19,8 +19,22 @@
     animation: fadeInUp 0.5s ease-in-out;
 }
 
-.home-header .logo {
+.logo-container {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
     width: 150px;
+}
+
+.project-name {
+    font-family: 'Georgia', cursive; /* Cambia el estilo de letra */
+    font-size: 2.5rem; /* Aumenta el tamaño de la fuente */
+    font-weight: bold;
+    margin-left: 5rem; /* Aumenta el margen izquierdo */
+    color:rgba(0, 0, 0, 255); /* Mismo color que el botón "Comenzar ahora" */
+    
 }
 
 .navbar ul {
@@ -77,79 +91,6 @@
 .cta-button:hover {
     transform: scale(1.05);
     background-color: #8E1A28; /* Un tono más oscuro al pasar el cursor */
-}
-
-
-
-.login-button {
-    background-color: #A51C30; 
-    color: #fff;
-    border: none;
-    padding: 1rem 2rem;
-    cursor: pointer;
-    transition: transform 0.3s, background-color 0.3s;
-    animation: fadeInUp 0.5s ease-in-out;
-}
-
-.login-button:hover {
-    transform: scale(1.05);
-    background-color: #8E1A28; /* Un tono más oscuro al pasar el cursor */
-}
-
-.features-page {
-    padding: 2rem;
-    text-align: center;
-}
-
-.features-header {
-    margin-bottom: 2rem;
-}
-
-.feature-section {
-    margin-bottom: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.feature-block {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-}
-
-.feature-description {
-    background-color: #A51C30; /* Mismo color que el botón "Comenzar ahora" */
-    color: #fff;
-    padding: 1rem;
-    border-radius: 8px;
-    width: 45%;
-    text-align: left;
-}
-
-.feature-video {
-    width: 50%;
-}
-
-.feature-video video {
-    width: 100%;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-@media (max-width: 768px) {
-    .feature-section {
-        flex-direction: column;
-    }
-
-    .feature-description, .feature-video {
-        width: 100%;
-    }
-
-    .feature-description {
-        margin-bottom: 1rem;
-    }
 }
 
 @media (max-width: 768px) {

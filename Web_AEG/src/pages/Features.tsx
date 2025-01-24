@@ -1,7 +1,6 @@
 import React from 'react';
-import '../css/home.css';
 import Navbar from '../components/Navbar';
-
+import '../css/features.css';
 
 const Features = () => {
     return (

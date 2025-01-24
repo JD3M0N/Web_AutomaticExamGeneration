@@ -21,7 +21,10 @@ const Navbar = () => {
 
     return (
         <header className="home-header">
-            <img src={logo} alt="ExamGeneration Logo" className="logo" />
+            <div className="logo-container">
+                <img src={logo} alt="ExamGeneration Logo" className="logo" />
+                <span className="project-name">ExamGeneration</span>
+            </div>
             <nav className="navbar">
                 <ul>
                     <li><a href="#home" onClick={handleHomeClick}>Inicio</a></li>
