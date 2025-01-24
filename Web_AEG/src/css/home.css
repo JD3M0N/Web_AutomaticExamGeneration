@@ -1,0 +1,171 @@
+.home {
+    font-family: 'Georgia', serif;
+    color: #333;
+    background: #fafafa;
+    padding: 2rem;
+    text-align: center;
+}
+
+.home-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: auto;
+    padding: 1rem 2rem;
+    background: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    animation: fadeInUp 0.5s ease-in-out;
+}
+
+.home-header .logo {
+    width: 150px;
+}
+
+.navbar ul {
+    list-style: none;
+    display: flex;
+    gap: 1rem;
+}
+
+.navbar ul li {
+    display: inline;
+}
+
+.navbar ul li a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.navbar ul li a:hover {
+    background-color: #A51C30;
+    color: #fff;
+    border-radius: 4px;
+}
+
+.hero-section {
+    padding: 4rem 2rem;
+    background: #f5f5f5;
+    text-align: center;
+    animation: fadeInUp 0.5s ease-in-out;
+}
+
+.hero-section h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.hero-section p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.cta-button {
+    background-color: #A51C30;
+    color: #fff;
+    border: none;
+    padding: 1rem 2rem;
+    cursor: pointer;
+    transition: transform 0.3s, background-color 0.3s;
+    animation: fadeInUp 0.5s ease-in-out;
+}
+
+.cta-button:hover {
+    transform: scale(1.05);
+    background-color: #8E1A28; /* Un tono más oscuro al pasar el cursor */
+}
+
+
+
+.login-button {
+    background-color: #A51C30; 
+    color: #fff;
+    border: none;
+    padding: 1rem 2rem;
+    cursor: pointer;
+    transition: transform 0.3s, background-color 0.3s;
+    animation: fadeInUp 0.5s ease-in-out;
+}
+
+.login-button:hover {
+    transform: scale(1.05);
+    background-color: #8E1A28; /* Un tono más oscuro al pasar el cursor */
+}
+
+.features-page {
+    padding: 2rem;
+    text-align: center;
+}
+
+.features-header {
+    margin-bottom: 2rem;
+}
+
+.feature-section {
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.feature-block {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.feature-description {
+    background-color: #A51C30; /* Mismo color que el botón "Comenzar ahora" */
+    color: #fff;
+    padding: 1rem;
+    border-radius: 8px;
+    width: 45%;
+    text-align: left;
+}
+
+.feature-video {
+    width: 50%;
+}
+
+.feature-video video {
+    width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+    .feature-section {
+        flex-direction: column;
+    }
+
+    .feature-description, .feature-video {
+        width: 100%;
+    }
+
+    .feature-description {
+        margin-bottom: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .home-header h1 {
+        font-size: 2rem;
+    }
+}
+
+/* Animación al hacer scroll */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

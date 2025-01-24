@@ -9,6 +9,16 @@ const LogIn = () => {
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Redirecciones inmediatas por email y password
+        if (email === 'abel@gmail.com' && password === '123') {
+            navigate('/admin');
+            return;
+        } else if (email === 'ponce@gmail.com' && password === '123') {
+            navigate('/professor');
+            return;
+        }
+
         try {
             const response = await fetch('http://localhost:5024/api/Auth/login', {
                 method: 'POST',

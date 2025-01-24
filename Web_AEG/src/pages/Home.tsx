@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import '../css/home.css';
+import Navbar from '../components/Navbar';
 
 const Home = () => {
     const navigate = useNavigate(); // Hook para la redirección
@@ -8,18 +10,16 @@ const Home = () => {
         navigate('/login'); // Redirigir a la página de login
     };
 
+
     return (
         <div className="home">
-            <header className="home-header">
-                <h1>Bienvenidos a Nuestra Escuela</h1>
-                <p>
-                    Nuestra escuela se dedica a proporcionar una educación de calidad y
-                    fomentar el crecimiento personal y académico de nuestros estudiantes.
-                </p>
-                <button onClick={handleLoginClick} className="login-button">
-                    Iniciar Sesión
-                </button>
-            </header>
+            <Navbar />
+            <section className="hero-section">
+                <h1>Simplifica la creación de exámenes en minutos</h1>
+                <p>Automatiza la gestión de preguntas y exámenes con una interfaz intuitiva para profesores y estudiantes.</p>
+                <button onClick={handleLoginClick} className="cta-button">Comenzar ahora</button>
+            </section>
+            
         </div>
     );
 };

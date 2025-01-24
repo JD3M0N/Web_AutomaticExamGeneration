@@ -5,6 +5,7 @@ import LogIn from './pages/LogIn';
 import Admin from './pages/Admin';
 import Professor from './pages/Professor';
 import Student from './pages/Student';
+import Features from './pages/Features'; 
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -16,6 +17,9 @@ function App() {
 
         {/* Página de login */}
         <Route path="/login" element={<LogIn />} />
+
+        {/* Página de funcionalidades */}
+        <Route path="/features" element={<Features />} /> {/* Nueva ruta */}
 
         {/* Rutas protegidas */}
         <Route
