@@ -1,23 +1,17 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Necesitamos React Router para la navegación
+import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import '../css/login.css';
 
 const LogIn = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loginMessage, setLoginMessage] = useState('');
-    const navigate = useNavigate(); // Hook para redirigir al usuario
+    const navigate = useNavigate();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Redirecciones inmediatas por email y password
-        if (email === 'abel@gmail.com' && password === '123') {
-            navigate('/admin');
-            return;
-        } else if (email === 'ponce@gmail.com' && password === '123') {
-            navigate('/professor');
-            return;
-        }
 
         try {
             const response = await fetch('http://localhost:5024/api/Auth/login', {
@@ -31,11 +25,9 @@ const LogIn = () => {
             if (response.ok) {
                 const data = await response.json();
 
-                // Guardar el token JWT y el tipo de usuario en el almacenamiento local
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('userType', data.userType);
 
-                // Redirigir al usuario a la página correspondiente según su tipo
                 if (data.userType === 'Admin') {
                     navigate('/admin');
                 } else if (data.userType === 'Professor') {
@@ -55,30 +47,35 @@ const LogIn = () => {
     };
 
     return (
-        <div>
-            <h2>Login</h2>
-            <form onSubmit={handleLogin}>
-                <div>
-                    <label>Email:</label>
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Password:</label>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
-                <button type="submit">Login</button>
-            </form>
-            {loginMessage && <p>{loginMessage}</p>}
+        <div className="login-page">
+            <Navbar />
+            <div className="login-container">
+                <form onSubmit={handleLogin} className="login-form">
+                    <div>
+                        <input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Introduce tu email"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <input
+                            id="password"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Introduce tu contraseña"
+                            required
+                        />
+                    </div>
+                    <button type="submit">Login</button>
+                </form>
+                {loginMessage && <p className="login-message">{loginMessage}</p>}
+            </div>
+            <Footer />
         </div>
     );
 };

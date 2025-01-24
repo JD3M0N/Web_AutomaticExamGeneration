@@ -33,6 +33,8 @@ a:hover {
 /* Hacer que el contenedor raíz ocupe al menos toda la altura disponible */
 #root {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 h1 {

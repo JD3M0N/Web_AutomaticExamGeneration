@@ -3,6 +3,17 @@
     text-align: center;
 }
 
+.login-container {
+    max-width: 400px;
+    max-height: 300px;
+    margin: 6% auto 0 auto; /* Añade un margen superior para separar del navbar */
+    padding: 2rem;
+    background: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    animation: fadeInUp 0.5s ease-in-out;
+}
+
 .login-header {
     margin-bottom: 2rem;
 }
@@ -13,15 +24,27 @@
     align-items: center;
 }
 
+.login-form div {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centra los elementos dentro del div */
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
 .login-form label {
     margin-bottom: 0.5rem;
+    font-weight: bold;
+    width: 100%;
+    text-align: left;
 }
 
 .login-form input {
-    margin-bottom: 1rem;
     padding: 0.5rem;
     border-radius: 4px;
     border: 1px solid #ccc;
+    width: 60%; /* Asegura que los campos de entrada ocupen el 100% del ancho disponible */
+    box-sizing: border-box; /* Asegura que el padding y el borde se incluyan en el ancho total */
 }
 
 .login-form button {
@@ -36,4 +59,21 @@
 .login-form button:hover {
     transform: scale(1.05);
     background-color: #8E1A28; /* Un tono más oscuro al pasar el cursor */
+}
+
+.login-message {
+    color: red;
+    margin-top: 1rem;
+}
+
+/* Animación al hacer scroll */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

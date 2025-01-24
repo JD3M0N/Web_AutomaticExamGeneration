@@ -11,42 +11,44 @@ import ProtectedRoute from './components/ProtectedRoute';
 function App() {
   return (
     <Router>
-      <Routes>
-        {/* Página de inicio */}
-        <Route path="/" element={<Home />} />
+      <div id="root">
+        <Routes>
+          {/* Página de inicio */}
+          <Route path="/" element={<Home />} />
 
-        {/* Página de login */}
-        <Route path="/login" element={<LogIn />} />
+          {/* Página de login */}
+          <Route path="/login" element={<LogIn />} />
 
-        {/* Página de funcionalidades */}
-        <Route path="/features" element={<Features />} /> {/* Nueva ruta */}
+          {/* Página de funcionalidades */}
+          <Route path="/features" element={<Features />} /> {/* Nueva ruta */}
 
-        {/* Rutas protegidas */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute>
-              <Admin />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/professor"
-          element={
-            <ProtectedRoute>
-              <Professor />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student"
-          element={
-            <ProtectedRoute>
-              <Student />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+          {/* Rutas protegidas */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <Admin />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/professor"
+            element={
+              <ProtectedRoute>
+                <Professor />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student"
+            element={
+              <ProtectedRoute>
+                <Student />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </div>
     </Router>
   );
 }

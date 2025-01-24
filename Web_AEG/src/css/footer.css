@@ -1,0 +1,16 @@
+.footer {
+    background-color: #ffff;
+    color: #8996a0;
+    padding-bottom: 64px;
+    padding-top: 64px;
+    position: relative;
+    z-index: 1;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    display: block;
+    box-sizing: border-box;
+    unicode-bidi: isolate;
+    font: 400 normal 100% / 1.5 GT America Standard Regular;
+    -webkit-font-smoothing: antialiased;
+}
