@@ -22,11 +22,17 @@
     width: 100%;
 }
 
+.feature-description h2 {
+    font-family: 'Orbitron', sans-serif; /* Cambia el estilo de letra */
+}
+
+
 .feature-description {
     background-color: #A51C30; /* Mismo color que el botón "Comenzar ahora" */
     color: #fff;
     padding: 1rem;
     border-radius: 8px;
+    font-family: 'Tahoma', sans-serif; /* Cambia el estilo de letra */
     width: 45%;
     text-align: left;
 }

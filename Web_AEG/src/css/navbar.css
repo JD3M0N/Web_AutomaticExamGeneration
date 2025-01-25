@@ -1,0 +1,44 @@
+.navbar ul {
+    list-style: none;
+    display: flex;
+    gap: 1rem;
+}
+
+.navbar ul li {
+    display: inline;
+}
+
+.navbar ul li a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    padding: 0.5rem 1rem;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.navbar ul li a:hover {
+    background-color: #A51C30;
+    color: #fff;
+    border-radius: 4px;
+}
+
+.admin-link {
+    font-family: 'Orbitron', sans-serif; /* Cambia el estilo de letra */
+    font-size: 3.5rem; /* Aumenta el tamaño de la fuente */
+    font-weight: bold;
+    color: #A51C30; /* Usa el color de los botones */
+}
+
+.logout-button {
+    background-color: #A51C30;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    border-radius: 4px;
+}
+
+.logout-button:hover {
+    background-color: #8E1A28; /* Un tono más oscuro al pasar el cursor */
+}

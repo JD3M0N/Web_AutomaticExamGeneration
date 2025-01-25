@@ -16,7 +16,7 @@ const LogIn = () => {
         if (email === 'abelponce03@email.com' && password === '123') {
             localStorage.setItem('token', 'dummy-token'); // Puedes usar un token ficticio
             localStorage.setItem('userType', 'Admin');
-            navigate('/professor');
+            navigate('/admin');
             return;
         }
         try {

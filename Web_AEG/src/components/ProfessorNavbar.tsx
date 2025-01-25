@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/logo.jpg'; // Asegúrate de tener un logo en esta ruta
-import '../css/home.css';
+import '../css/navbar.css';
 
 const ProfessorNavbar = () => {
     const navigate = useNavigate();
