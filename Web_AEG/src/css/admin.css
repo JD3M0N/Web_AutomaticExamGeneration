@@ -3,18 +3,59 @@
     text-align: center;
 }
 
-.admin-header {
-    margin-bottom: 2rem;
+.admin-content {
+    display: flex;
+}
+
+.sidebar {
+    width: 200px;
+    background-color: #f5f5f5;
+    margin: 2% auto 0 auto;
+    margin-bottom: auto;
+    padding: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-right: 2rem;
+}
+
+.sidebar button {
+    display: block;
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    background-color: #A51C30;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.sidebar button:hover {
+    background-color: #8E1A28;
+}
+
+.form-container {
+    flex-grow: 1;
+    background: #fff;
+    margin: 2% auto 0 auto;
+    padding: 2rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
 }
 
 .admin-form {
     display: flex;
     flex-direction: column;
     align-items: center;
+    margin-bottom: 2rem;
 }
 
 .admin-form label {
     margin-bottom: 0.5rem;
+    font-weight: bold;
+    width: 100%;
+    text-align: left;
 }
 
 .admin-form input,
@@ -23,6 +64,8 @@
     padding: 0.5rem;
     border-radius: 4px;
     border: 1px solid #ccc;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .admin-form button {
@@ -37,4 +80,26 @@
 .admin-form button:hover {
     transform: scale(1.05);
     background-color: #8E1A28; /* Un tono más oscuro al pasar el cursor */
+}
+
+.custom-label {
+    color: rgba(0, 0, 0, 0.4); /* Cambia el color de la etiqueta */
+}
+
+.admin-link {
+    font-family: 'Orbitron', sans-serif; /* Cambia el estilo de letra */
+    font-size: 4.5rem; /* Aumenta el tamaño de la fuente */
+    font-weight: bold;
+    color: #A51C30; /* Usa el color de los botones */
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
+import AdminNavbar from '../components/AdminNavbar';
+import Footer from '../components/Footer';
+import '../css/admin.css';
 
 const AdminPage = () => {
+    const [activeForm, setActiveForm] = useState('');
+
     const [userType, setUserType] = useState('');
     const [formData, setFormData] = useState({
         name: '',
@@ -232,194 +237,205 @@ const AdminPage = () => {
         }
     };
 
-
     return (
-        <div>
-            <h1>Admin Dashboard</h1>
-            <p>Bienvenido al panel de administración.</p>
-            {/* Formulario para usuarios */}
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Tipo de Usuario:</label>
-                    <select value={userType} onChange={handleUserTypeChange} required>
-                        <option value="">Seleccione un tipo</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Professor">Professor</option>
-                        <option value="Student">Student</option>
-                    </select>
+        <div className="admin-page">
+            <AdminNavbar />
+            <div className="admin-content">
+                <div className="sidebar">
+                    <button onClick={() => setActiveForm('user')}>Agregar Usuario</button>
+                    <button onClick={() => setActiveForm('assignment')}>Añadir Asignatura</button>
+                    <button onClick={() => setActiveForm('teach')}>Asignar Profesor a Asignatura</button>
+                    <button onClick={() => setActiveForm('topic')}>Añadir Topic</button>
+                    <button onClick={() => setActiveForm('own')}>Relacionar Asignatura con Tema</button>
                 </div>
-                <div>
-                    <label>Nombre:</label>
-                    <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        required
-                    />
+                <div className="form-container">
+                    {activeForm === 'user' && (
+                        <form onSubmit={handleSubmit} className="admin-form">
+                            <div>
+                                <label className="custom-label">Tipo de Usuario:</label>
+                                <select value={userType} onChange={handleUserTypeChange} required>
+                                    <option value="">Seleccione un tipo</option>
+                                    <option value="Admin">Admin</option>
+                                    <option value="Professor">Professor</option>
+                                    <option value="Student">Student</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="custom-label">Nombre:</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="custom-label">Email:</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="custom-label">Contraseña:</label>
+                                <input
+                                    type="password"
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+                            {userType === 'Professor' && (
+                                <div>
+                                    <label className="custom-label">Especialización:</label>
+                                    <input
+                                        type="text"
+                                        name="specialization"
+                                        value={formData.specialization}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                            )}
+                            {userType === 'Student' && (
+                                <>
+                                    <div>
+                                        <label className="custom-label">Edad:</label>
+                                        <input
+                                            type="number"
+                                            name="age"
+                                            value={formData.age}
+                                            onChange={handleInputChange}
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="custom-label">Grado:</label>
+                                        <input
+                                            type="text"
+                                            name="grade"
+                                            value={formData.grade}
+                                            onChange={handleInputChange}
+                                            required
+                                        />
+                                    </div>
+                                </>
+                            )}
+                            <button type="submit">Agregar Usuario</button>
+                        </form>
+                    )}
+                    {activeForm === 'assignment' && (
+                        <form onSubmit={handleAssignmentSubmit} className="admin-form">
+                           
+                            <div>
+                                <label className="custom-label">Nombre de la Asignatura:</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={assignmentData.name}
+                                    onChange={handleAssignmentChange}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="custom-label">Programa de Estudio:</label>
+                                <input
+                                    type="text"
+                                    name="studyProgram"
+                                    value={assignmentData.studyProgram}
+                                    onChange={handleAssignmentChange}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="custom-label">Email del Profesor:</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={assignmentData.email}
+                                    onChange={handleAssignmentChange}
+                                    required
+                                />
+                            </div>
+                            <button type="submit">Agregar Asignatura</button>
+                        </form>
+                    )}
+                    {activeForm === 'teach' && (
+                        <form onSubmit={handleTeachSubmit} className="admin-form">
+                         
+                            <div>
+                                <label className="custom-label">Email del Profesor:</label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={teachData.email}
+                                    onChange={handleTeachChange}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="custom-label">Nombre de la Asignatura:</label>
+                                <input
+                                    type="text"
+                                    name="assignmentName"
+                                    value={teachData.assignmentName}
+                                    onChange={handleTeachChange}
+                                    required
+                                />
+                            </div>
+                            <button type="submit">Asignar Teach</button>
+                        </form>
+                    )}
+                    {activeForm === 'topic' && (
+                        <form onSubmit={handleTopicSubmit} className="admin-form">
+                            
+                            <div>
+                                <label className="custom-label">Nombre del Topic:</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={topicData.name}
+                                    onChange={handleTopicChange}
+                                    required
+                                />
+                            </div>
+                            <button type="submit">Agregar Topic</button>
+                        </form>
+                    )}
+                    {activeForm === 'own' && (
+                        <form onSubmit={handleOwnSubmit} className="admin-form">
+                           
+                            <div>
+                                <label className="custom-label">Nombre de la Asignatura:</label>
+                                <input
+                                    type="text"
+                                    name="assignmentName"
+                                    value={ownData.assignmentName}
+                                    onChange={handleOwnChange}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="custom-label">Nombre del Tema:</label>
+                                <input
+                                    type="text"
+                                    name="topicName"
+                                    value={ownData.topicName}
+                                    onChange={handleOwnChange}
+                                    required
+                                />
+                            </div>
+                            <button type="submit">Relacionar</button>
+                        </form>
+                    )}
+                    {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
                 </div>
-                <div>
-                    <label>Email:</label>
-                    <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Contraseña:</label>
-                    <input
-                        type="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        required
-                    />
-                </div>
-                {userType === 'Professor' && (
-                    <div>
-                        <label>Especialización:</label>
-                        <input
-                            type="text"
-                            name="specialization"
-                            value={formData.specialization}
-                            onChange={handleInputChange}
-                        />
-                    </div>
-                )}
-                {userType === 'Student' && (
-                    <>
-                        <div>
-                            <label>Edad:</label>
-                            <input
-                                type="number"
-                                name="age"
-                                value={formData.age}
-                                onChange={handleInputChange}
-                                required
-                            />
-                        </div>
-                        <div>
-                            <label>Grado:</label>
-                            <input
-                                type="text"
-                                name="grade"
-                                value={formData.grade}
-                                onChange={handleInputChange}
-                                required
-                            />
-                        </div>
-                    </>
-                )}
-                {/* {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>} Mostrar el error en la página */}
-                <button type="submit">Agregar Usuario</button>
-            </form>
-
-            {/* Formulario para asignaturas */}
-            <form onSubmit={handleAssignmentSubmit}>
-                <h2>Añadir Asignatura</h2>
-                <div>
-                    <label>Nombre de la Asignatura:</label>
-                    <input
-                        type="text"
-                        name="name"
-                        value={assignmentData.name}
-                        onChange={handleAssignmentChange}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Programa de Estudio:</label>
-                    <input
-                        type="text"
-                        name="studyProgram"
-                        value={assignmentData.studyProgram}
-                        onChange={handleAssignmentChange}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Email del Profesor:</label>
-                    <input
-                        type="email"
-                        name="email"
-                        value={assignmentData.email}
-                        onChange={handleAssignmentChange}
-                        required
-                    />
-                </div>
-                <button type="submit">Agregar Asignatura</button>
-            </form>
-
-            <form onSubmit={handleTeachSubmit}>
-                <h2>Asignar Profesor a Asignatura</h2>
-                <div>
-                    <label>Email del Profesor:</label>
-                    <input
-                        type="email"
-                        name="email"
-                        value={teachData.email}
-                        onChange={handleTeachChange}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Nombre de la Asignatura:</label>
-                    <input
-                        type="text"
-                        name="assignmentName"
-                        value={teachData.assignmentName}
-                        onChange={handleTeachChange}
-                        required
-                    />
-                </div>
-                <button type="submit">Asignar Teach</button>
-            </form>
-
-            <form onSubmit={handleTopicSubmit}>
-                <h2>Añadir Topic</h2>
-                <div>
-                    <label>Nombre del Topic:</label>
-                    <input
-                        type="text"
-                        name="name"
-                        value={topicData.name}
-                        onChange={handleTopicChange}
-                        required
-                    />
-                </div>
-                <button type="submit">Agregar Topic</button>
-            </form>
-
-            <form onSubmit={handleOwnSubmit}>
-                <h2>Relacionar Asignatura con Tema</h2>
-                <div>
-                    <label>Nombre de la Asignatura:</label>
-                    <input
-                        type="text"
-                        name="assignmentName"
-                        value={ownData.assignmentName}
-                        onChange={handleOwnChange}
-                        required
-                    />
-                </div>
-                <div>
-                    <label>Nombre del Tema:</label>
-                    <input
-                        type="text"
-                        name="topicName"
-                        value={ownData.topicName}
-                        onChange={handleOwnChange}
-                        required
-                    />
-                </div>
-                <button type="submit">Relacionar</button>
-            </form>
-
-
-            {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
+            </div>
+            <Footer />
         </div>
     );
 };
