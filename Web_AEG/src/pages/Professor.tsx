@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
-
+import ProfessorNavbar from '../components/ProfessorNavbar';
+import Footer from '../components/Footer';
+import '../css/professor.css';
 
 const ProfessorPage = () => {
-    const [showForm, setShowForm] = useState(false);
+    const [activeForm, setActiveForm] = useState('');
     const [professorId, setProfessorId] = useState<number | null>(null); // Estado para almacenar el ID del profesor
     const [formData, setFormData] = useState({
         difficulty: '',
@@ -17,7 +19,7 @@ const ProfessorPage = () => {
         try {
             const token = localStorage.getItem('token'); // Cambia si usas otro almacenamiento
             if (token) {
-                const decoded: any = jwtDecode(token);               // Decodifica el token
+                const decoded: any = jwtDecode(token); // Decodifica el token
                 if (decoded.professorId) {
                     setProfessorId(decoded.professorId); // Extrae el professorId
                 } else {
@@ -73,7 +75,6 @@ const ProfessorPage = () => {
             }
 
             alert('Pregunta añadida exitosamente');
-            setShowForm(false); // Cierra el formulario después de enviarlo
             setFormData({
                 difficulty: '',
                 type: '',
@@ -87,63 +88,73 @@ const ProfessorPage = () => {
     };
 
     return (
-        <div>
-            <h1>Professor Dashboard</h1>
-            <p>Bienvenido al panel de profesores.</p>
-            <button onClick={() => setShowForm(true)}>Añadir Pregunta</button>
-
-            {showForm && (
-                <div>
-                    <h2>Formulario para Añadir Pregunta</h2>
-                    <form onSubmit={handleSubmit}>
-                        <label>
-                            Dificultad:
-                            <select name="difficulty" value={formData.difficulty} onChange={handleInputChange} required>
-                                <option value="">Selecciona una opción</option>
-                                <option value="1">Fácil</option>
-                                <option value="2">Media</option>
-                                <option value="3">Difícil</option>
-                            </select>
-                        </label>
-                        <br />
-                        <label>
-                            Tipo:
-                            <select name="type" value={formData.type} onChange={handleInputChange} required>
-                                <option value="">Selecciona un tipo</option>
-                                <option value="MultipleChoice">Opción Múltiple</option>
-                                <option value="TrueFalse">Verdadero/Falso</option>
-                                <option value="Essay">Ensayo</option>
-                            </select>
-                        </label>
-                        <br />
-                        <label>
-                            Texto de la Pregunta:
-                            <textarea
-                                name="questionText"
-                                value={formData.questionText}
-                                onChange={handleInputChange}
-                                required
-                            />
-                        </label>
-                        <br />
-                        <label>
-                            ID del Tema:
-                            <input
-                                type="number"
-                                name="topicId"
-                                value={formData.topicId}
-                                onChange={handleInputChange}
-                                required
-                            />
-                        </label>
-                        <br />
-                        <button type="submit">Enviar Pregunta</button>
-                        <button type="button" onClick={() => setShowForm(false)}>
-                            Cancelar
-                        </button>
-                    </form>
+        <div className="professor-page">
+            <ProfessorNavbar/>
+            <div className="professor-content">
+                <div className="sidebar">
+                    <button onClick={() => setActiveForm('addQuestion')}>Añadir Pregunta</button>
+                    <button onClick={() => setActiveForm('viewQuestions')}>Ver Preguntas</button>
+                    <button onClick={() => setActiveForm('editProfile')}>Editar Perfil</button>
                 </div>
-            )}
+                <div className="form-container">
+                    {activeForm === 'addQuestion' && (
+                        <form onSubmit={handleSubmit} className="professor-form">
+                            <h2>Añadir Pregunta</h2>
+                            <div>
+                                <label className="custom-label">Dificultad:</label>
+                                <select name="difficulty" value={formData.difficulty} onChange={handleInputChange} required>
+                                    <option value="">Selecciona una opción</option>
+                                    <option value="1">Fácil</option>
+                                    <option value="2">Media</option>
+                                    <option value="3">Difícil</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="custom-label">Tipo:</label>
+                                <select name="type" value={formData.type} onChange={handleInputChange} required>
+                                    <option value="">Selecciona un tipo</option>
+                                    <option value="MultipleChoice">Opción Múltiple</option>
+                                    <option value="TrueFalse">Verdadero/Falso</option>
+                                    <option value="Essay">Ensayo</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="custom-label">Texto de la Pregunta:</label>
+                                <textarea
+                                    name="questionText"
+                                    value={formData.questionText}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="custom-label">ID del Tema:</label>
+                                <input
+                                    type="number"
+                                    name="topicId"
+                                    value={formData.topicId}
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+                            <button type="submit">Enviar Pregunta</button>
+                        </form>
+                    )}
+                    {activeForm === 'viewQuestions' && (
+                        <div>
+                            <h2>Ver Preguntas</h2>
+                            {/* Aquí puedes agregar la lógica para mostrar las preguntas */}
+                        </div>
+                    )}
+                    {activeForm === 'editProfile' && (
+                        <div>
+                            <h2>Editar Perfil</h2>
+                            {/* Aquí puedes agregar la lógica para editar el perfil */}
+                        </div>
+                    )}
+                </div>
+            </div>
+            <Footer />
         </div>
     );
 };
