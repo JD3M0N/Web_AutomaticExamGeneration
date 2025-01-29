@@ -7,6 +7,7 @@ import '../css/professor.css';
 const ProfessorPage = () => {
     const [activeForm, setActiveForm] = useState('');
     const [professorId, setProfessorId] = useState<number | null>(null); // Estado para almacenar el ID del profesor
+    const [isHeadOfAssignment, setIsHeadOfAssignment] = useState(false); // Estado para almacenar si es líder de asignatura
     const [formData, setFormData] = useState({
         difficulty: '',
         type: '',
@@ -14,14 +15,17 @@ const ProfessorPage = () => {
         topicId: '',
     });
 
-    // Decodificar el token y obtener el professorId
+    // Decodificar el token y obtener el professorId y isHeadOfAssignment
     useEffect(() => {
         try {
             const token = localStorage.getItem('token'); // Cambia si usas otro almacenamiento
             if (token) {
                 const decoded: any = jwtDecode(token); // Decodifica el token
+                console.log('Token decodificado:', decoded);
                 if (decoded.professorId) {
                     setProfessorId(decoded.professorId); // Extrae el professorId
+                    setIsHeadOfAssignment(decoded.IsHeadOfAssignment); // Extrae isHeadOfAssignment
+                    console.log('IsHeadOfAssignment:', decoded.IsHeadOfAssignment);
                 } else {
                     console.error('El token no contiene professorId.');
                     alert('No se pudo obtener la información del profesor. Por favor, inicia sesión nuevamente.');
@@ -151,6 +155,9 @@ const ProfessorPage = () => {
                             <h2>Editar Perfil</h2>
                             {/* Aquí puedes agregar la lógica para editar el perfil */}
                         </div>
+                    )}
+                    {isHeadOfAssignment && (
+                        <button onClick={() => window.location.href = '/endpoint'}>Acceder al Endpoint</button>
                     )}
                 </div>
             </div>
