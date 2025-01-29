@@ -13,12 +13,6 @@ const LogIn = () => {
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (email === 'abelponce03@email.com' && password === '123') {
-            localStorage.setItem('token', 'dummy-token'); // Puedes usar un token ficticio
-            localStorage.setItem('userType', 'Admin');
-            navigate('/admin');
-            return;
-        }
         try {
             const response = await fetch('http://localhost:5024/api/Auth/login', {
                 method: 'POST',

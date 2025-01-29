@@ -1,11 +1,11 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import logo from '../assets/logo.jpg'; // Asegúrate de tener un logo en esta ruta
 import '../css/navbar.css';
 
-
 const Navbar = () => {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleLoginClick = () => {
         navigate('/login');
@@ -17,20 +17,48 @@ const Navbar = () => {
 
     const handleHomeClick = () => {
         navigate('/');
-    }
+    };
 
     return (
         <header className="home-header">
             <div className="logo-container">
                 <img src={logo} alt="ExamGeneration Logo" className="logo" />
-                <span className="project-name">ExamGeneration</span>
+                <h1 className="project-name">ExamGeneration</h1>
             </div>
             <nav className="navbar">
                 <ul>
-                    <li><a href="#home" onClick={handleHomeClick}>Inicio</a></li>
-                    <li><a href="#features" onClick={handleFeaturesClick}>Funcionalidades</a></li>
-                    <li><a href="#contact">Contacto</a></li>
-                    <li><a href="#login" onClick={handleLoginClick}>Login</a></li>
+                    <li>
+                        <a
+                            href="#home"
+                            onClick={handleHomeClick}
+                            className={location.pathname === '/' ? 'active' : ''}
+                        >
+                            Inicio
+                        </a>
+                    </li>
+                    <li>
+                        <a
+                            href="#features"
+                            onClick={handleFeaturesClick}
+                            className={location.pathname === '/features' ? 'active' : ''}
+                        >
+                            Funcionalidades
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#contact" className={location.pathname === '/contact' ? 'active' : ''}>
+                            Contacto
+                        </a>
+                    </li>
+                    <li>
+                        <a
+                            href="#login"
+                            onClick={handleLoginClick}
+                            className={location.pathname === '/login' ? 'active' : ''}
+                        >
+                            Login
+                        </a>
+                    </li>
                 </ul>
             </nav>
         </header>
