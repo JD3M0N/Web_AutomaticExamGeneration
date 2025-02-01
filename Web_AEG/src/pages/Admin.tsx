@@ -38,9 +38,12 @@ const AdminPage = () => {
             const response = await fetch('http://localhost:5024/api/Topic');
             if (response.ok) {
                 const data = await response.json();
-                setTopics(data);
+                const topics = data.$values; // Extrae los valores relevantes
+                console.log('Temas obtenidos:', topics); // Verifica los datos obtenidos
+                setTopics(topics);
             } else {
                 const errorData = await response.json();
+                console.error('Error al obtener los temas:', errorData);
                 setNotification({ message: errorData.message || 'Error al obtener los temas.', type: 'error' });
             }
         } catch (error) {
@@ -379,8 +382,9 @@ const AdminPage = () => {
             const response = await fetch('http://localhost:5024/api/Assignment');
             if (response.ok) {
                 const data = await response.json();
-                console.log('Asignaturas obtenidas:', data); // Verifica los datos obtenidos
-                setAssignments(data);
+                const assignments = data.$values; // Extrae los valores relevantes
+                console.log('Asignaturas obtenidas:', assignments); // Verifica los datos obtenidos
+                setAssignments(assignments);
                 setActiveForm('viewAssignments'); // Cambia el estado para mostrar la lista de asignaturas
             } else {
                 const errorData = await response.json();
@@ -476,8 +480,9 @@ const AdminPage = () => {
             });
             if (response.ok) {
                 const data = await response.json();
-                console.log('Estudiantes obtenidos:', data); // Verifica los datos obtenidos
-                setStudents(data);
+                const students = data.$values; // Extrae los valores relevantes
+                console.log('Estudiantes obtenidos:', students); // Verifica los datos obtenidos
+                setStudents(students);
                 setActiveForm('viewStudents'); // Cambia el estado para mostrar la lista de estudiantes
             } else {
                 const errorData = await response.json();
@@ -621,8 +626,9 @@ const AdminPage = () => {
             const response = await fetch('http://localhost:5024/api/Professor');
             if (response.ok) {
                 const data = await response.json();
-                console.log('Profesores obtenidos:', data); // Verifica los datos obtenidos
-                setProfessors(data);
+                const professors = data.$values; // Extrae los valores relevantes
+                console.log('Profesores obtenidos:', professors); // Verifica los datos obtenidos
+                setProfessors(professors);
                 setActiveForm('viewProfessors'); // Cambia el estado para mostrar la lista de profesores
             } else {
                 const errorData = await response.json();
@@ -714,8 +720,9 @@ const AdminPage = () => {
             const response = await fetch('http://localhost:5024/api/Admin');
             if (response.ok) {
                 const data = await response.json();
-                console.log('Administradores obtenidos:', data); // Verifica los datos obtenidos
-                setAdmins(data);
+                const admins = data.$values; // Extrae los valores relevantes
+                console.log('Administradores obtenidos:', admins); // Verifica los datos obtenidos
+                setAdmins(admins);
                 setActiveForm('viewAdmins'); // Cambia el estado para mostrar la lista de administradores
             } else {
                 const errorData = await response.json();

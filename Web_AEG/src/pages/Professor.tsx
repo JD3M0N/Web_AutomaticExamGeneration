@@ -8,6 +8,7 @@ const ProfessorPage = () => {
     const [activeForm, setActiveForm] = useState('');
     const [professorId, setProfessorId] = useState<number | null>(null); // Estado para almacenar el ID del profesor
     const [isHeadOfAssignment, setIsHeadOfAssignment] = useState(false); // Estado para almacenar si es líder de asignatura
+    const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
     const [formData, setFormData] = useState({
         difficulty: '',
         type: '',
@@ -51,13 +52,17 @@ const ProfessorPage = () => {
             const response = await fetch('http://localhost:5024/api/Topic');
             if (response.ok) {
                 const data = await response.json();
-                setTopics(data);
+                const topics = data.$values; // Extrae los valores relevantes
+                console.log('Temas obtenidos:', topics); // Verifica los datos obtenidos
+                setTopics(topics);
             } else {
                 const errorData = await response.json();
                 console.error('Error al obtener los temas:', errorData);
+                setNotification({ message: errorData.message || 'Error al obtener los temas.', type: 'error' });
             }
         } catch (error) {
             console.error('Error al conectar con el servidor:', error);
+            setNotification({ message: 'Hubo un problema con la conexión al servidor.', type: 'error' });
         }
     };
 
