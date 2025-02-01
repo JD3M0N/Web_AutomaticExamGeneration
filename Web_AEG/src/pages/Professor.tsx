@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode';
+import {jwtDecode} from 'jwt-decode';
 import ProfessorNavbar from '../components/ProfessorNavbar';
 import Footer from '../components/Footer';
+import Notification from '../components/Notification';
+import { fetchTopics } from '../utils/crudTopic';
+import { fetchQuestions } from '../utils/crudQuestion';
 import '../css/professor.css';
 
 const ProfessorPage = () => {
@@ -16,6 +19,7 @@ const ProfessorPage = () => {
         topicId: '',
     });
     const [topics, setTopics] = useState([]); // Estado para almacenar los temas disponibles
+    const [questions, setQuestions] = useState([]); // Estado para almacenar las preguntas disponibles
 
     // Decodificar el token y obtener el professorId y isHeadOfAssignment
     useEffect(() => {
@@ -44,27 +48,15 @@ const ProfessorPage = () => {
 
     // Obtener los temas desde la base de datos
     useEffect(() => {
-        fetchTopics();
+        fetchTopics(setTopics, setNotification);
     }, []);
 
-    const fetchTopics = async () => {
-        try {
-            const response = await fetch('http://localhost:5024/api/Topic');
-            if (response.ok) {
-                const data = await response.json();
-                const topics = data.$values; // Extrae los valores relevantes
-                console.log('Temas obtenidos:', topics); // Verifica los datos obtenidos
-                setTopics(topics);
-            } else {
-                const errorData = await response.json();
-                console.error('Error al obtener los temas:', errorData);
-                setNotification({ message: errorData.message || 'Error al obtener los temas.', type: 'error' });
-            }
-        } catch (error) {
-            console.error('Error al conectar con el servidor:', error);
-            setNotification({ message: 'Hubo un problema con la conexión al servidor.', type: 'error' });
+    // Obtener las preguntas cuando se selecciona "viewQuestions"
+    useEffect(() => {
+        if (activeForm === 'viewQuestions') {
+            fetchQuestions(setQuestions, setNotification);
         }
-    };
+    }, [activeForm]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -119,14 +111,18 @@ const ProfessorPage = () => {
 
     return (
         <div className="professor-page">
-            <ProfessorNavbar/>
+            <ProfessorNavbar />
             <div className="professor-content">
                 <div className="sidebar">
                     <button onClick={() => setActiveForm('addQuestion')}>Añadir Pregunta</button>
                     <button onClick={() => setActiveForm('viewQuestions')}>Ver Preguntas</button>
                     <button onClick={() => setActiveForm('editProfile')}>Editar Perfil</button>
+                    {isHeadOfAssignment && (
+                        <button onClick={() => window.location.href = '/endpoint'}>Validar Examen</button>
+                    )}
                 </div>
                 <div className="form-container">
+                    {notification && <Notification message={notification.message} type={notification.type} />}
                     {activeForm === 'addQuestion' && (
                         <form onSubmit={handleSubmit} className="professor-form">
                             <h2>Añadir Pregunta</h2>
@@ -172,9 +168,21 @@ const ProfessorPage = () => {
                         </form>
                     )}
                     {activeForm === 'viewQuestions' && (
-                        <div>
+                        <div className="list-container">
                             <h2>Ver Preguntas</h2>
-                            {/* Aquí puedes agregar la lógica para mostrar las preguntas */}
+                            {questions.length > 0 ? (
+                                <ul>
+                                    {questions.map((question: { id: number, questionText: string, difficulty: number, type: string }) => (
+                                        <li key={question.id}>
+                                            <span>{question.questionText}</span>
+                                            <span>{question.difficulty}</span>
+                                            <span>{question.type}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p>No hay preguntas disponibles.</p>
+                            )}
                         </div>
                     )}
                     {activeForm === 'editProfile' && (
@@ -182,9 +190,6 @@ const ProfessorPage = () => {
                             <h2>Editar Perfil</h2>
                             {/* Aquí puedes agregar la lógica para editar el perfil */}
                         </div>
-                    )}
-                    {isHeadOfAssignment && (
-                        <button onClick={() => window.location.href = '/endpoint'}>Acceder al Endpoint</button>
                     )}
                 </div>
             </div>
