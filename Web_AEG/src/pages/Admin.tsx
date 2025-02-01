@@ -7,22 +7,101 @@ import '../css/admin.css';
 const AdminPage = () => {
     const [activeForm, setActiveForm] = useState('')
     const [admins, setAdmins] = useState([]);
-    const [assignmentData, setAssignmentData] = useState({
-        name: '',
-        studyProgram: '',
-        email: '',
-    });
+
+    const [assignments, setAssignments] = useState([]);
     const [teachData, setTeachData] = useState({
         email: '',
         assignmentName: '',
     });
-    const [topicData, setTopicData] = useState({
+
+    // manejo de temas 
+    const [topics, setTopics] = useState([]);
+    const [newTopicData, setNewTopicData] = useState({
         name: '',
+        assignmentId: '',
     });
-    const [ownData, setOwnData] = useState({
-        assignmentName: '',
-        topicName: '',
-    });
+
+    const [showAddTopicModal, setShowAddTopicModal] = useState(false);
+
+    useEffect(() => {
+        fetchAssignments();
+        fetchTopics();
+    }, []);
+
+    const handleNewTopicInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setNewTopicData({ ...newTopicData, [name]: value });
+    };
+
+    const fetchTopics = async () => {
+        try {
+            const response = await fetch('http://localhost:5024/api/Topic');
+            if (response.ok) {
+                const data = await response.json();
+                setTopics(data);
+            } else {
+                const errorData = await response.json();
+                setNotification({ message: errorData.message || 'Error al obtener los temas.', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Error al conectar con el servidor:', error);
+            setNotification({ message: 'Hubo un problema con la conexión al servidor.', type: 'error' });
+        }
+    };
+
+    const handleAddTopicSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const endpoint = 'http://localhost:5024/api/Topic';
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newTopicData),
+            });
+
+            if (response.ok) {
+                setNotification({ message: 'Topic añadido exitosamente.', type: 'success' });
+                setNewTopicData({ name: '', assignmentId: '' });
+                fetchTopics();
+                setShowAddTopicModal(false);
+            } else {
+                const errorData = await response.json();
+                setNotification({ message: errorData.message || 'Error al añadir el topic.', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Error al conectar con el servidor:', error);
+            setNotification({ message: 'Hubo un problema con la conexión al servidor.', type: 'error' });
+        }
+    };
+
+    const deleteTopic = async (id: number) => {
+        try {
+            console.log('Eliminando tema con ID:', id);
+            const response = await fetch(`http://localhost:5024/api/Topic/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (response.ok) {
+                console.log('Tema eliminado exitosamente');
+                setNotification({ message: 'Tema eliminado exitosamente.', type: 'success' });
+                fetchTopics();
+            } else {
+                const errorData = await response.json();
+                console.error('Error al eliminar el tema:', errorData);
+                setNotification({ message: errorData.message || 'Error al eliminar el tema.', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Error al conectar con el servidor:', error);
+            setNotification({ message: 'Hubo un problema con la conexión al servidor.', type: 'error' });
+        }
+    };
+
+    //----------------------------------
     const [students, setStudents] = useState([]);
     const [professors, setProfessors] = useState([]);
     const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
@@ -232,6 +311,112 @@ const AdminPage = () => {
     };
 
     //-----------------------------------------------------------------------
+
+    //manejo de anadir asignaturas 
+
+    const [showAddAssignmentModal, setShowAddAssignmentModal] = useState(false);
+    const [newAssignmentData, setNewAssignmentData] = useState({
+        name: '',
+        studyProgram: '',
+        email: '',
+    });
+
+    const handleNewAssignmentInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setNewAssignmentData({ ...newAssignmentData, [name]: value });
+    };
+
+    const handleAddAssignmentSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await addAssignment(newAssignmentData);
+            setShowAddAssignmentModal(false);
+            setNewAssignmentData({
+                name: '',
+                studyProgram: '',
+                email: '',
+            });
+            fetchAssignments();
+        } catch (error: any) {
+            setNotification({ message: error.message, type: 'error' });
+        }
+    };
+
+    const addAssignment = async (assignmentData: { name: string, studyProgram: string, email: string }) => {
+        try {
+            const response = await fetch('http://localhost:5024/api/Assignment/add-with-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(assignmentData),
+            });
+
+            if (response.ok) {
+                try {
+                    const data = await response.json();
+                    console.log('Asignatura añadida:', data); // Verifica los datos obtenidos
+                    fetchAssignments(); // Actualiza la lista de asignaturas
+                    setNotification({ message: 'Asignatura añadida exitosamente.', type: 'success' });
+                } catch (error) {
+                    console.log('Asignatura añadida, pero la respuesta no es JSON.');
+                    fetchAssignments(); // Actualiza la lista de asignaturas
+                    setNotification({ message: 'Asignatura añadida exitosamente.', type: 'success' });
+                }
+            } else {
+                const errorData = await response.json();
+                console.error('Error al añadir la asignatura:', errorData);
+                setNotification({ message: errorData.message || 'Error al añadir la asignatura.', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Error al conectar con el servidor:', error);
+            setNotification({ message: 'Hubo un problema con la conexión al servidor.', type: 'error' });
+        }
+    };
+
+    const fetchAssignments = async () => {
+        try {
+            const response = await fetch('http://localhost:5024/api/Assignment');
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Asignaturas obtenidas:', data); // Verifica los datos obtenidos
+                setAssignments(data);
+                setActiveForm('viewAssignments'); // Cambia el estado para mostrar la lista de asignaturas
+            } else {
+                const errorData = await response.json();
+                console.error('Error al obtener las asignaturas:', errorData);
+                setNotification({ message: errorData.message || 'Error al obtener las asignaturas.', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Error al conectar con el servidor:', error);
+            setNotification({ message: 'Hubo un problema con la conexión al servidor.', type: 'error' });
+        }
+    };
+
+    const deleteAssignment = async (id: number) => {
+        try {
+            const response = await fetch(`http://localhost:5024/api/Assignment/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (response.ok) {
+                console.log('Asignatura eliminada'); // Verifica la eliminación
+                fetchAssignments(); // Actualiza la lista de asignaturas
+                setNotification({ message: 'Asignatura eliminada exitosamente.', type: 'success' });
+            } else {
+                const errorData = await response.json();
+                console.error('Error al eliminar la asignatura:', errorData);
+                setNotification({ message: errorData.message || 'Error al eliminar la asignatura.', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Error al conectar con el servidor:', error);
+            setNotification({ message: 'Hubo un problema con la conexión al servidor.', type: 'error' });
+        }
+    };
+    //-------------------------------------------------------------------
+
     useEffect(() => {
         if (notification) {
             const timer = setTimeout(() => {
@@ -241,52 +426,13 @@ const AdminPage = () => {
         }
     }, [notification]);
 
-   
+    useEffect(() => {
+        fetchAssignments();
+    }, []);
 
-
-    const handleAssignmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setAssignmentData({ ...assignmentData, [name]: value });
-    };
-
-    const handleTeachChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleTeachChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setTeachData({ ...teachData, [name]: value });
-    };
-
-    const handleTopicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setTopicData({ ...topicData, [name]: value });
-    };
-
-    const handleAssignmentSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const endpoint = 'http://localhost:5024/api/Assignment/add-with-email';
-
-        try {
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(assignmentData),
-            });
-
-            if (response.ok) {
-                setNotification({ message: 'Asignatura añadida exitosamente.', type: 'success' });
-                setAssignmentData({
-                    name: '',
-                    studyProgram: '',
-                    email: '',
-                });
-            } else {
-                const errorData = await response.json();
-                setNotification({ message: errorData.message || 'Error al añadir la asignatura.', type: 'error' });
-            }
-        } catch (error) {
-            console.error('Error al conectar con el servidor:', error);
-            setNotification({ message: 'Hubo un problema con la conexión al servidor.', type: 'error' });
-        }
     };
 
     const handleTeachSubmit = async (e: React.FormEvent) => {
@@ -306,37 +452,11 @@ const AdminPage = () => {
                 setNotification({ message: 'Teach añadido exitosamente.', type: 'success' });
                 setTeachData({
                     email: '',
-                    assignmentName: '',
+                    assignmentName: '', // Cambiado a assignmentName
                 });
             } else {
                 const errorData = await response.json();
                 setNotification({ message: errorData.message || 'Error al añadir Teach.', type: 'error' });
-            }
-        } catch (error) {
-            console.error('Error al conectar con el servidor:', error);
-            setNotification({ message: 'Hubo un problema con la conexión al servidor.', type: 'error' });
-        }
-    };
-
-    const handleTopicSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const endpoint = 'http://localhost:5024/api/Topic';
-
-        try {
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(topicData.name),
-            });
-
-            if (response.ok) {
-                setNotification({ message: 'Topic añadido exitosamente.', type: 'success' });
-                setTopicData({ name: '' });
-            } else {
-                const errorData = await response.json();
-                setNotification({ message: errorData.message || 'Error al añadir el topic.', type: 'error' });
             }
         } catch (error) {
             console.error('Error al conectar con el servidor:', error);
@@ -618,47 +738,87 @@ const AdminPage = () => {
                     <button onClick={fetchAdmins}>Administradores</button>
                     <button onClick={fetchProfessors}>Profesores</button>
                     <button onClick={fetchStudents}>Estudiantes</button>
-                    <button onClick={() => setActiveForm('assignment')}>Añadir Asignatura</button>
+                    <button onClick={fetchAssignments}>Asignaturas</button>
                     <button onClick={() => setActiveForm('teach')}>Asignar Profesor a Asignatura</button>
                     <button onClick={() => setActiveForm('topic')}>Añadir Topic</button>
-                    
+
                 </div>
                 <div className="form-container">
                     {notification && <Notification message={notification.message} type={notification.type} />}
-                    {activeForm === 'assignment' && (
-                        <form onSubmit={handleAssignmentSubmit} className="admin-form">
-                            <div>
-                                <label className="custom-label">Nombre de la Asignatura:</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={assignmentData.name}
-                                    onChange={handleAssignmentChange}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="custom-label">Programa de Estudio:</label>
-                                <input
-                                    type="text"
-                                    name="studyProgram"
-                                    value={assignmentData.studyProgram}
-                                    onChange={handleAssignmentChange}
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="custom-label">Email del Profesor:</label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={assignmentData.email}
-                                    onChange={handleAssignmentChange}
-                                    required
-                                />
-                            </div>
-                            <button type="submit">Agregar Asignatura</button>
-                        </form>
+                    {activeForm === 'viewAssignments' && (
+                        <div className="list-container">
+                            <h2>Asignaturas</h2>
+                            <button
+                                style={{ backgroundColor: 'green' }}
+                                onClick={() => setShowAddAssignmentModal(true)}
+                            >
+                                +
+                            </button>
+                            {assignments.length > 0 ? (
+                                <ul>
+                                    {assignments.map((assignment: { id: number, name: string, studyProgram: string, email: string }) => (
+                                        <li key={assignment.id}>
+                                            <span>{assignment.name}</span>
+                                            <span>{assignment.studyProgram}</span>
+                                            <span>{assignment.email}</span>
+                                            <div className="button-group">
+                                                <button
+                                                    style={{ backgroundColor: 'red' }}
+                                                    onClick={() => deleteAssignment(assignment.id)}
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p>No hay asignaturas disponibles.</p>
+                            )}
+
+                            {showAddAssignmentModal && (
+                                <div className="modal">
+                                    <div className="modal-content">
+                                        <h2>Añadir Asignatura</h2>
+                                        <form onSubmit={handleAddAssignmentSubmit}>
+                                            <div>
+                                                <label>Nombre:</label>
+                                                <input
+                                                    type="text"
+                                                    name="name"
+                                                    value={newAssignmentData.name}
+                                                    onChange={handleNewAssignmentInputChange}
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label>Programa de Estudio:</label>
+                                                <input
+                                                    type="text"
+                                                    name="studyProgram"
+                                                    value={newAssignmentData.studyProgram}
+                                                    onChange={handleNewAssignmentInputChange}
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label>Email del Profesor:</label>
+                                                <input
+                                                    type="email"
+                                                    name="email"
+                                                    value={newAssignmentData.email}
+                                                    onChange={handleNewAssignmentInputChange}
+                                                    required
+                                                />
+                                            </div>
+                                            <button type="submit">Añadir</button>
+                                            <button type="button" onClick={() => setShowAddAssignmentModal(false)}>Cancelar</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
                     )}
                     {activeForm === 'teach' && (
                         <form onSubmit={handleTeachSubmit} className="admin-form">
@@ -673,32 +833,94 @@ const AdminPage = () => {
                                 />
                             </div>
                             <div>
-                                <label className="custom-label">Nombre de la Asignatura:</label>
-                                <input
-                                    type="text"
+                                <label className="custom-label">Asignatura:</label>
+                                <select
                                     name="assignmentName"
                                     value={teachData.assignmentName}
                                     onChange={handleTeachChange}
                                     required
-                                />
+                                    className="custom-select" // Añade esta clase
+                                >
+                                    <option value="">Selecciona una asignatura</option>
+                                    {assignments.map((assignment: { id: number, name: string }) => (
+                                        <option key={assignment.id} value={assignment.name}>
+                                            {assignment.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                             <button type="submit">Asignar Teach</button>
                         </form>
                     )}
                     {activeForm === 'topic' && (
-                        <form onSubmit={handleTopicSubmit} className="admin-form">
-                            <div>
-                                <label className="custom-label">Nombre del Topic:</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={topicData.name}
-                                    onChange={handleTopicChange}
-                                    required
-                                />
-                            </div>
-                            <button type="submit">Agregar Topic</button>
-                        </form>
+                        <div className="list-container">
+                            <h2>Temas</h2>
+                            <button
+                                style={{ backgroundColor: 'green' }}
+                                onClick={() => setShowAddTopicModal(true)}
+                            >
+                                +
+                            </button>
+                            {topics.length > 0 ? (
+                                <ul>
+                                    {topics.map((topic: { id: number, name: string, assignmentName: string }) => (
+                                        <li key={topic.id}>
+                                            <span>{topic.name}</span>
+                                            <span>{topic.assignmentName}</span>
+                                            <div className="button-group">
+                                                <button
+                                                    style={{ backgroundColor: 'red' }}
+                                                    onClick={() => deleteTopic(topic.id)}
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p>No hay temas disponibles.</p>
+                            )}
+
+                            {showAddTopicModal && (
+                                <div className="modal">
+                                    <div className="modal-content">
+                                        <h2>Añadir Tema</h2>
+                                        <form onSubmit={handleAddTopicSubmit}>
+                                            <div>
+                                                <label>Nombre:</label>
+                                                <input
+                                                    type="text"
+                                                    name="name"
+                                                    value={newTopicData.name}
+                                                    onChange={handleNewTopicInputChange}
+                                                    required
+                                                />
+                                            </div>
+                                            <div>
+                                                <label>Asignatura:</label>
+                                                <select
+                                                    name="assignmentId"
+                                                    value={newTopicData.assignmentId}
+                                                    onChange={handleNewTopicInputChange}
+                                                    required
+                                                    className="custom-select" // Añade esta clase
+                                                >
+                                                    <option value="">Selecciona una asignatura</option>
+                                                    {assignments.map((assignment: { id: number, name: string }) => (
+                                                        <option key={assignment.id} value={assignment.id}>
+                                                            {assignment.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <button type="submit">Añadir</button>
+                                            <button type="button" onClick={() => setShowAddTopicModal(false)}>Cancelar</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     )}
                     {activeForm === 'viewStudents' && (
                         <div className="list-container">
@@ -1047,7 +1269,7 @@ const AdminPage = () => {
                                                 >
                                                     ↑
                                                 </button>
-                                             
+
                                             </div>
                                         </li>
                                     ))}

@@ -14,6 +14,7 @@ const ProfessorPage = () => {
         questionText: '',
         topicId: '',
     });
+    const [topics, setTopics] = useState([]); // Estado para almacenar los temas disponibles
 
     // Decodificar el token y obtener el professorId y isHeadOfAssignment
     useEffect(() => {
@@ -39,6 +40,26 @@ const ProfessorPage = () => {
             alert('Hubo un error al procesar tu sesión. Por favor, inicia sesión nuevamente.');
         }
     }, []);
+
+    // Obtener los temas desde la base de datos
+    useEffect(() => {
+        fetchTopics();
+    }, []);
+
+    const fetchTopics = async () => {
+        try {
+            const response = await fetch('http://localhost:5024/api/Topic');
+            if (response.ok) {
+                const data = await response.json();
+                setTopics(data);
+            } else {
+                const errorData = await response.json();
+                console.error('Error al obtener los temas:', errorData);
+            }
+        } catch (error) {
+            console.error('Error al conectar con el servidor:', error);
+        }
+    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
@@ -132,14 +153,15 @@ const ProfessorPage = () => {
                                 />
                             </div>
                             <div>
-                                <label className="custom-label">ID del Tema:</label>
-                                <input
-                                    type="number"
-                                    name="topicId"
-                                    value={formData.topicId}
-                                    onChange={handleInputChange}
-                                    required
-                                />
+                                <label className="custom-label">Tema:</label>
+                                <select name="topicId" value={formData.topicId} onChange={handleInputChange} required>
+                                    <option value="">Selecciona un tema</option>
+                                    {topics.map((topic: { id: number, name: string }) => (
+                                        <option key={topic.id} value={topic.id}>
+                                            {topic.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                             <button type="submit">Enviar Pregunta</button>
                         </form>
