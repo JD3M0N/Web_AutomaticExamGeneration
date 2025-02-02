@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import ProfessorNavbar from '../components/ProfessorNavbar';
 import Footer from '../components/Footer';
 import Notification from '../components/Notification';
@@ -32,9 +32,148 @@ const ProfessorPage = () => {
         { topicId: '', difficulty: '' },
         { topicId: '', difficulty: '' },
     ]);
+    const [unvalidatedExams, setUnvalidatedExams] = useState<any[]>([]);
 
-    // Obtiene el ID del profesor desde el token almacenado en localStorage
+    const handleViewExamsSelect = async (assignmentId: number) => {
+        setSelectedAssignment(assignmentId);
+        try {
+            const response = await fetch(`http://localhost:5024/api/Assignment/${assignmentId}/exams`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const examsData = data.$values || [];
+                const enrichedExams = await Promise.all(
+                    examsData.map(async (exam: any) => {
+                        try {
+                            const profResponse = await fetch(`http://localhost:5024/api/Professor/${exam.professorId}`, {
+                                method: 'GET',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                            });
+                            if (profResponse.ok) {
+                                const professorData = await profResponse.json();
+                                // Se obtiene el email del profesor junto con sus demás datos
+                                exam.professor = professorData;
+                            }
+                        } catch (error) {
+                            console.error('Error al obtener profesor:', error);
+                        }
+                        return exam;
+                    })
+                );
+                setExams(enrichedExams);
+                setActiveForm('viewExams');
+            } else {
+                const errorData = await response.json();
+                setNotification({ message: errorData.message, type: 'error' });
+            }
+        } catch (error) {
+            setNotification({ message: 'Error al conectar con el servidor.', type: 'error' });
+        }
+    };
+
+    const fetchUnvalidatedExams = async () => {
+        try {
+            const response = await fetch('http://localhost:5024/api/Professor/1/unvalidated-exams', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const exams = data.$values || [];
+                const enrichedExams = await Promise.all(
+                    exams.map(async (exam: any) => {
+                        // Obtener los detalles del profesor
+                        try {
+                            const profResponse = await fetch(`http://localhost:5024/api/Professor/${professorId}`, {
+                                method: 'GET',
+                                headers: { 'Content-Type': 'application/json' },
+                            });
+                            if (profResponse.ok) {
+                                const professorData = await profResponse.json();
+                                exam.professor = professorData;
+                            }
+                        } catch (error) {
+                            console.error('Error al obtener profesor:', error);
+                        }
+                        // Obtener los detalles de la asignatura
+                        try {
+                            const assignResponse = await fetch(`http://localhost:5024/api/Assignment/${exam.assignmentId}`, {
+                                method: 'GET',
+                                headers: { 'Content-Type': 'application/json' },
+                            });
+                            if (assignResponse.ok) {
+                                const assignmentData = await assignResponse.json();
+                                exam.assignment = assignmentData;
+                            }
+                        } catch (error) {
+                            console.error('Error al obtener asignatura:', error);
+                        }
+                        return exam;
+                    })
+                );
+                setUnvalidatedExams(enrichedExams);
+            } else {
+                const errorData = await response.json();
+                setNotification({ message: errorData.message, type: 'error' });
+            }
+        } catch (error) {
+            setNotification({ message: 'Error al conectar con el servidor.', type: 'error' });
+        }
+    };
+
     useEffect(() => {
+        if (notification) {
+            const timer = setTimeout(() => {
+                setNotification(null);
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [notification]);
+
+    // Función para validar o denegar un examen
+    const handleExamValidation = async (examId: number, validationState: boolean) => {
+        if (!professorId) return;
+        try {
+            const response = await fetch('http://localhost:5024/api/Validate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
+                body: JSON.stringify({
+                    examId,
+                    professorId,
+                    observations: '',
+                    validationDate: new Date().toISOString(),
+                    validationState,
+                }),
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setNotification({ message: `Examen ${validationState ? 'aprobado' : 'denegado'} exitosamente.`, type: 'success' });
+                // Remover de los exámenes sin validar (o actualizar el estado según el requerimiento)
+                setUnvalidatedExams(prev => prev.filter(exam => exam.id !== examId));
+            } else {
+                const errorData = await response.json();
+                setNotification({ message: errorData.message || 'Error al validar el examen.', type: 'error' });
+            }
+        } catch (error) {
+            setNotification({ message: 'Error al conectar con el servidor.', type: 'error' });
+        }
+    };
+
+    useEffect(() => {
+        // Verifica y decodifica el token
         try {
             const token = localStorage.getItem('token');
             if (token) {
@@ -42,21 +181,14 @@ const ProfessorPage = () => {
                 if (decoded.professorId) {
                     setProfessorId(decoded.professorId);
                     setIsHeadOfAssignment(decoded.IsHeadOfAssignment);
-                    console.log('Profesor ID:', decoded.professorId);
                 } else {
-                    console.error('El token no contiene professorId.');
                     alert('No se pudo obtener la información del profesor. Inicia sesión nuevamente.');
                 }
-            } else {
-                console.error('No se encontró ningún token en localStorage.');
-                alert('Inicia sesión para continuar.');
             }
-        } catch (error) {
-            console.error('Error al decodificar el token:', error);
+        } catch {
             alert('Hubo un error al procesar tu sesión. Inicia sesión nuevamente.');
         }
     }, []);
-
     // Carga los temas disponibles para el profesor logueado
     useEffect(() => {
         if (professorId) {
@@ -75,11 +207,11 @@ const ProfessorPage = () => {
 
     // Carga los exámenes cuando se selecciona "Ver Exámenes"
     useEffect(() => {
-        if (activeForm === 'viewExams' && professorId) {
-            fetchExams(professorId, setExams, setNotification);
-            console.log('Exámenes obtenidos:', exams);
+        if (activeForm === 'viewExams' && !selectedAssignment && professorId) {
+          fetchExams(professorId, setExams, setNotification);
+          console.log('Exámenes obtenidos:', exams);
         }
-    }, [activeForm, professorId]);
+      }, [activeForm, professorId, selectedAssignment]);
 
     // Manejo de cambios en los inputs
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -201,6 +333,11 @@ const ProfessorPage = () => {
         fetchProfessorTopics(professorId!, setTopics, setNotification);
     };
 
+    const handleValidateExamsClick = async () => {
+        await fetchUnvalidatedExams();
+        setActiveForm('validateExams');
+    };
+
     return (
         <div className="professor-page">
             <ProfessorNavbar />
@@ -209,14 +346,58 @@ const ProfessorPage = () => {
                     <button onClick={() => setActiveForm('addQuestion')}>Añadir Pregunta</button>
                     <button onClick={() => setActiveForm('viewQuestions')}>Ver Preguntas</button>
                     <button onClick={() => setActiveForm('selectAssignment')}>Crear Examen</button>
-                    <button onClick={() => setActiveForm('viewExams')}>Ver Exámenes</button>
+                    <button onClick={() => setActiveForm('selectAssignmentForExams')}>Ver Exámenes</button>
                     {isHeadOfAssignment && (
-                        <button onClick={() => window.location.href = '/endpoint'}>Validar Examen</button>
+                        <button onClick={handleValidateExamsClick}>Validar Examen</button>
                     )}
                 </div>
                 <div className="form-container">
                     {notification && <Notification message={notification.message} type={notification.type} />}
 
+                    {activeForm === 'validateExams' && unvalidatedExams.length > 0 && (
+                        <div className="list-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Email del Profesor</th>
+                                        <th>Nombre de la Asignatura</th>
+                                        <th>Fecha</th>
+                                        <th>Total preguntas</th>
+                                        <th>Dificultad</th>
+                                        <th>Cantidad de temas</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {unvalidatedExams.map((exam) => (
+                                        <tr key={exam.id}>
+                                            <td>{exam.professor?.email || 'Desconocido'}</td>
+                                            <td>{exam.assignment?.name || 'Desconocido'}</td>
+                                            <td>{exam.date}</td>
+                                            <td>{exam.totalQuestions}</td>
+                                            <td>{exam.difficulty}</td>
+                                            <td>{exam.topicLimit}</td>
+                                            <td>
+                                                <div className="button-group">
+                                                    <button
+                                                        className="validate-button"
+                                                        onClick={() => handleExamValidation(exam.id, true)}
+                                                    >
+                                                        <i className="fa fa-check" aria-hidden="true"></i>
+                                                    </button>
+                                                    <button
+                                                        className="deny-button"
+                                                        onClick={() => handleExamValidation(exam.id, false)}
+                                                    >
+                                                        <i className="fa fa-times" aria-hidden="true"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                     {activeForm === 'addQuestion' && (
                         <form onSubmit={handleSubmit} className="professor-form">
                             <h2>Añadir Pregunta</h2>
@@ -293,15 +474,21 @@ const ProfessorPage = () => {
                                 <table>
                                     <thead>
                                         <tr>
-                                            <th>Nombre del Examen</th>
+                                            <th>Email del Profesor</th>
                                             <th>Fecha</th>
+                                            <th>Total preguntas</th>
+                                            <th>Dificultad</th>
+                                            <th>Cantidad de temas</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {exams.map((exam: { id: number, name: string, date: string }) => (
+                                        {exams.map((exam: { id: number, name: string, date: string, totalQuestions: number, difficulty: number, topicLimit: number }) => (
                                             <tr key={exam.id}>
-                                                <td>{exam.name}</td>
+                                                <td>{exam.professor?.email || 'Desconocido'}</td>
                                                 <td>{exam.date}</td>
+                                                <td>{exam.totalQuestions}</td>
+                                                <td>{exam.difficulty}</td>
+                                                <td>{exam.topicLimit}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -311,7 +498,24 @@ const ProfessorPage = () => {
                             )}
                         </div>
                     )}
-
+                    {activeForm === 'selectAssignmentForExams' && (
+                        <div className="list-container">
+                            <h2>Selecciona una Asignatura</h2>
+                            {assignments.length > 0 ? (
+                                <ul>
+                                    {assignments.map((assignment: { id: number; name: string }) => (
+                                        <li key={assignment.id}>
+                                            <button onClick={() => handleViewExamsSelect(assignment.id)}>
+                                                {assignment.name}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p>No hay asignaturas disponibles.</p>
+                            )}
+                        </div>
+                    )}
                     {activeForm === 'selectAssignment' && (
                         <div className="list-container">
                             <h2>Selecciona una Asignatura</h2>
