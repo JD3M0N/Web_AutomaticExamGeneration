@@ -140,6 +140,29 @@ const ProfessorPage = () => {
         }
     }, [notification]);
 
+    useEffect(() => {
+        if (activeForm === 'createExam' && selectedAssignment) {
+            fetch(`http://localhost:5024/api/Assignment/${selectedAssignment}/topics`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
+            })
+                .then((res) => {
+                    if (res.ok) return res.json();
+                    throw new Error('Error al obtener los temas.');
+                })
+                .then((data) => {
+                    const topicsData = data.$values || [];
+                    setTopics(topicsData);
+                })
+                .catch((error) => {
+                    console.error('Error fetching topics:', error);
+                });
+        }
+    }, [activeForm, selectedAssignment]);
+
     // Función para validar o denegar un examen
     const handleExamValidation = async (examId: number, validationState: boolean) => {
         if (!professorId) return;
@@ -208,10 +231,10 @@ const ProfessorPage = () => {
     // Carga los exámenes cuando se selecciona "Ver Exámenes"
     useEffect(() => {
         if (activeForm === 'viewExams' && !selectedAssignment && professorId) {
-          fetchExams(professorId, setExams, setNotification);
-          console.log('Exámenes obtenidos:', exams);
+            fetchExams(professorId, setExams, setNotification);
+            console.log('Exámenes obtenidos:', exams);
         }
-      }, [activeForm, professorId, selectedAssignment]);
+    }, [activeForm, professorId, selectedAssignment]);
 
     // Manejo de cambios en los inputs
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -399,51 +422,77 @@ const ProfessorPage = () => {
                         </div>
                     )}
                     {activeForm === 'addQuestion' && (
-                        <form onSubmit={handleSubmit} className="professor-form">
+                        <form className="custom-form" onSubmit={handleSubmit}>
                             <h2>Añadir Pregunta</h2>
-                            <div>
-                                <label className="custom-label">Dificultad:</label>
-                                <select name="difficulty" value={formData.difficulty} onChange={handleInputChange} required>
-                                    <option value="">Selecciona una opción</option>
-                                    <option value="1">Fácil</option>
-                                    <option value="2">Media</option>
-                                    <option value="3">Difícil</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="custom-label">Tipo:</label>
-                                <select name="type" value={formData.type} onChange={handleInputChange} required>
-                                    <option value="">Selecciona un tipo</option>
-                                    <option value="MultipleChoice">Opción Múltiple</option>
-                                    <option value="TrueFalse">Verdadero/Falso</option>
-                                    <option value="Essay">Ensayo</option>
-                                </select>
-                            </div>
-                            <div>
+                            <div className="form-group">
                                 <label className="custom-label">Texto de la Pregunta:</label>
-                                <textarea name="questionText" value={formData.questionText} onChange={handleInputChange} required />
+                                <textarea
+                                    name="questionText"
+                                    className="custom-textarea"
+                                    value={formData.questionText}
+                                    onChange={handleInputChange}
+                                    required
+                                />
                             </div>
-                            <div>
+                            <div className="form-group">
                                 <label className="custom-label">Tema:</label>
-                                <select name="topicId" value={formData.topicId} onChange={handleInputChange} required>
+                                <select
+                                    name="topicId"
+                                    className="custom-select"
+                                    value={formData.topicId}
+                                    onChange={handleInputChange}
+                                    required
+                                >
                                     <option value="">Selecciona un tema</option>
-                                    {topics.map((topic: { id: number, name: string }) => (
+                                    {topics.map((topic: { id: number; name: string }) => (
                                         <option key={topic.id} value={topic.id}>
                                             {topic.name}
                                         </option>
                                     ))}
                                 </select>
                             </div>
-                            <button type="submit">Enviar Pregunta</button>
+                            <div className="form-group">
+                                <label className="custom-label">Dificultad:</label>
+                                <select
+                                    name="difficulty"
+                                    className="custom-select"
+                                    value={formData.difficulty}
+                                    onChange={handleInputChange}
+                                    required
+                                >
+                                    <option value="">Selecciona una opción</option>
+                                    <option value="1">Fácil</option>
+                                    <option value="2">Media</option>
+                                    <option value="3">Difícil</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label className="custom-label">Tipo:</label>
+                                <select
+                                    name="type"
+                                    className="custom-select"
+                                    value={formData.type}
+                                    onChange={handleInputChange}
+                                    required
+                                >
+                                    <option value="">Selecciona un tipo</option>
+                                    <option value="MultipleChoice">Opción Múltiple</option>
+                                    <option value="TrueFalse">Verdadero/Falso</option>
+                                    <option value="Essay">Ensayo</option>
+                                </select>
+                            </div>
+                            <button type="submit" className="submit-button">
+                                Enviar Pregunta
+                            </button>
                         </form>
                     )}
-
                     {activeForm === 'viewQuestions' && (
                         <div className="list-container">
                             {questions.length > 0 ? (
                                 <table>
                                     <thead>
                                         <tr>
+                                            <th>Email del Profesor</th>
                                             <th>Texto de la Pregunta</th>
                                             <th>Dificultad</th>
                                             <th>Tipo</th>
@@ -451,8 +500,16 @@ const ProfessorPage = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {questions.map((question: { id: number, questionText: string, difficulty: number, type: string, topicId: number }) => (
+                                        {questions.map((question: {
+                                            id: number,
+                                            questionText: string,
+                                            difficulty: number,
+                                            type: string,
+                                            topicId: number,
+                                            professor?: { email: string }
+                                        }) => (
                                             <tr key={question.id}>
+                                                <td>{question.professor?.email || 'Desconocido'}</td>
                                                 <td>{question.questionText}</td>
                                                 <td>{question.difficulty}</td>
                                                 <td>{question.type}</td>
@@ -479,16 +536,26 @@ const ProfessorPage = () => {
                                             <th>Total preguntas</th>
                                             <th>Dificultad</th>
                                             <th>Cantidad de temas</th>
+                                            <th>Estado</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {exams.map((exam: { id: number, name: string, date: string, totalQuestions: number, difficulty: number, topicLimit: number }) => (
+                                        {exams.map((exam: {
+                                            id: number,
+                                            name: string,
+                                            date: string,
+                                            totalQuestions: number,
+                                            difficulty: number,
+                                            topicLimit: number,
+                                            state?: string
+                                        }) => (
                                             <tr key={exam.id}>
                                                 <td>{exam.professor?.email || 'Desconocido'}</td>
                                                 <td>{exam.date}</td>
                                                 <td>{exam.totalQuestions}</td>
                                                 <td>{exam.difficulty}</td>
                                                 <td>{exam.topicLimit}</td>
+                                                <td>{exam.state || 'Sin definir'}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -500,7 +567,7 @@ const ProfessorPage = () => {
                     )}
                     {activeForm === 'selectAssignmentForExams' && (
                         <div className="list-container">
-                            <h2>Selecciona una Asignatura</h2>
+                            <h2>Ver Exámenes de una Asignatura</h2>
                             {assignments.length > 0 ? (
                                 <ul>
                                     {assignments.map((assignment: { id: number; name: string }) => (
@@ -518,7 +585,7 @@ const ProfessorPage = () => {
                     )}
                     {activeForm === 'selectAssignment' && (
                         <div className="list-container">
-                            <h2>Selecciona una Asignatura</h2>
+                            <h2>Crear Exámenes de una Asignatura</h2>
                             {assignments.length > 0 ? (
                                 <ul>
                                     {assignments.map((assignment: { id: number, name: string }) => (
@@ -536,11 +603,22 @@ const ProfessorPage = () => {
                     {activeForm === 'createExam' && selectedAssignment && (
                         <form onSubmit={handleExamSubmit} className="professor-form">
                             <h2>Crear Examen</h2>
-                            <button type="button" onClick={() => setActiveForm('selectAssignment')} className="back-button">←</button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveForm('selectAssignment')}
+                                className="back-button"
+                            >
+                                ←
+                            </button>
                             {examData.map((block, index) => (
                                 <div key={index} className="exam-block">
                                     <label className="custom-label">Tema:</label>
-                                    <select name="topicId" value={block.topicId} onChange={(e) => handleExamInputChange(index, e)} required>
+                                    <select
+                                        name="topicId"
+                                        value={block.topicId}
+                                        onChange={(e) => handleExamInputChange(index, e)}
+                                        required
+                                    >
                                         <option value="">Selecciona un tema</option>
                                         {topics.map((topic: { id: number, name: string }) => (
                                             <option key={topic.id} value={topic.id}>
@@ -549,7 +627,12 @@ const ProfessorPage = () => {
                                         ))}
                                     </select>
                                     <label className="custom-label">Dificultad:</label>
-                                    <select name="difficulty" value={block.difficulty} onChange={(e) => handleExamInputChange(index, e)} required>
+                                    <select
+                                        name="difficulty"
+                                        value={block.difficulty}
+                                        onChange={(e) => handleExamInputChange(index, e)}
+                                        required
+                                    >
                                         <option value="">Selecciona una opción</option>
                                         <option value="1">Fácil</option>
                                         <option value="2">Media</option>
@@ -557,7 +640,9 @@ const ProfessorPage = () => {
                                     </select>
                                 </div>
                             ))}
-                            <button type="submit">Crear Examen</button>
+                            <button type="submit" className="submit-button">
+                                Crear Examen
+                            </button>
                         </form>
                     )}
                 </div>
