@@ -89,6 +89,39 @@ export const fetchAssignments = async (
     }
 };
 
+export const fetchAssignmentsByProfessor = async (
+    professorId: number,
+    setAssignments: React.Dispatch<React.SetStateAction<any[]>>,
+    setNotification: React.Dispatch<React.SetStateAction<{ message: string; type: 'success' | 'error' } | null>>
+) => {
+    try {
+        const response = await fetch(`http://localhost:5024/api/Teach/professor/${professorId}/assignments`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const assignments = data.$values.map((item: any) => ({
+                id: item.assignmentId,
+                name: item.assignmentName,
+            })); // Extrae los valores relevantes
+            console.log('Asignaturas obtenidas:', assignments); // Verifica los datos obtenidos
+            setAssignments(assignments);
+        } else {
+            const errorData = await response.json();
+            console.error('Error al obtener las asignaturas:', errorData);
+            setNotification({ message: errorData.message || 'Error al obtener las asignaturas.', type: 'error' });
+        }
+    } catch (error) {
+        console.error('Error al conectar con el servidor:', error);
+        setNotification({ message: 'Hubo un problema con la conexión al servidor.', type: 'error' });
+    }
+};
+
 export const deleteAssignment = async (
     id: number,
     fetchAssignments: () => void,

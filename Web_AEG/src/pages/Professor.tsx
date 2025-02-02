@@ -6,6 +6,7 @@ import Notification from '../components/Notification';
 import { fetchProfessorTopics } from '../utils/crudTopic';
 import { fetchQuestions } from '../utils/crudQuestion';
 import { fetchExams } from '../utils/crudExam';
+import { fetchAssignmentsByProfessor } from '../utils/crudAssignment';
 import '../css/professor.css';
 
 const ProfessorPage = () => {
@@ -22,6 +23,8 @@ const ProfessorPage = () => {
     const [topics, setTopics] = useState([]);
     const [questions, setQuestions] = useState([]);
     const [exams, setExams] = useState([]);
+    const [assignments, setAssignments] = useState([]);
+    const [selectedAssignment, setSelectedAssignment] = useState<number | null>(null);
     const [examData, setExamData] = useState([
         { topicId: '', difficulty: '' },
         { topicId: '', difficulty: '' },
@@ -58,6 +61,7 @@ const ProfessorPage = () => {
     useEffect(() => {
         if (professorId) {
             fetchProfessorTopics(professorId, setTopics, setNotification);
+            fetchAssignmentsByProfessor(professorId, setAssignments, setNotification);
         }
     }, [professorId]);
 
@@ -184,6 +188,13 @@ const ProfessorPage = () => {
         return topic ? topic.name : 'Desconocido';
     };
 
+    // Manejo de la selección de una asignatura
+    const handleAssignmentSelect = (assignmentId: number) => {
+        setSelectedAssignment(assignmentId);
+        setActiveForm('createExam'); // Cambia el formulario activo a 'createExam'
+        fetchProfessorTopics(professorId!, setTopics, setNotification);
+    };
+
     return (
         <div className="professor-page">
             <ProfessorNavbar />
@@ -191,7 +202,7 @@ const ProfessorPage = () => {
                 <div className="sidebar">
                     <button onClick={() => setActiveForm('addQuestion')}>Añadir Pregunta</button>
                     <button onClick={() => setActiveForm('viewQuestions')}>Ver Preguntas</button>
-                    <button onClick={() => setActiveForm('createExam')}>Crear Examen</button>
+                    <button onClick={() => setActiveForm('selectAssignment')}>Crear Examen</button>
                     <button onClick={() => setActiveForm('viewExams')}>Ver Exámenes</button>
                     {isHeadOfAssignment && (
                         <button onClick={() => window.location.href = '/endpoint'}>Validar Examen</button>
@@ -242,18 +253,27 @@ const ProfessorPage = () => {
 
                     {activeForm === 'viewQuestions' && (
                         <div className="list-container">
-                            <h2>Ver Preguntas</h2>
                             {questions.length > 0 ? (
-                                <ul>
-                                    {questions.map((question: { id: number, questionText: string, difficulty: number, type: string, topicId: number }) => (
-                                        <li key={question.id}>
-                                            <span>{question.questionText}</span>
-                                            <span>{question.difficulty}</span>
-                                            <span>{question.type}</span>
-                                            <span>{getTopicName(question.topicId)}</span>
-                                        </li>
-                                    ))}
-                                </ul>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Texto de la Pregunta</th>
+                                            <th>Dificultad</th>
+                                            <th>Tipo</th>
+                                            <th>Tema</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {questions.map((question: { id: number, questionText: string, difficulty: number, type: string, topicId: number }) => (
+                                            <tr key={question.id}>
+                                                <td>{question.questionText}</td>
+                                                <td>{question.difficulty}</td>
+                                                <td>{question.type}</td>
+                                                <td>{getTopicName(question.topicId)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             ) : (
                                 <p>No hay preguntas disponibles.</p>
                             )}
@@ -264,21 +284,46 @@ const ProfessorPage = () => {
                         <div className="list-container">
                             <h2>Ver Exámenes</h2>
                             {exams.length > 0 ? (
-                                <ul>
-                                    {exams.map((exam: { id: number, name: string, date: string }) => (
-                                        <li key={exam.id}>
-                                            <span>{exam.name}</span>
-                                            <span>{exam.date}</span>
-                                        </li>
-                                    ))}
-                                </ul>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Nombre del Examen</th>
+                                            <th>Fecha</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {exams.map((exam: { id: number, name: string, date: string }) => (
+                                            <tr key={exam.id}>
+                                                <td>{exam.name}</td>
+                                                <td>{exam.date}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             ) : (
                                 <p>No hay exámenes disponibles.</p>
                             )}
                         </div>
                     )}
 
-                    {activeForm === 'createExam' && (
+                    {activeForm === 'selectAssignment' && (
+                        <div className="list-container">
+                            <h2>Selecciona una Asignatura</h2>
+                            {assignments.length > 0 ? (
+                                <ul>
+                                    {assignments.map((assignment: { id: number, name: string }) => (
+                                        <li key={assignment.id}>
+                                            <button onClick={() => handleAssignmentSelect(assignment.id)}>{assignment.name}</button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p>No hay asignaturas disponibles.</p>
+                            )}
+                        </div>
+                    )}
+
+                    {activeForm === 'createExam' && selectedAssignment && (
                         <form onSubmit={handleExamSubmit} className="professor-form">
                             <h2>Crear Examen</h2>
                             {examData.map((block, index) => (
