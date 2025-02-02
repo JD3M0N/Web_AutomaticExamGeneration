@@ -326,8 +326,9 @@ const ProfessorPage = () => {
                     {activeForm === 'createExam' && selectedAssignment && (
                         <form onSubmit={handleExamSubmit} className="professor-form">
                             <h2>Crear Examen</h2>
+                            <button type="button" onClick={() => setActiveForm('selectAssignment')} className="back-button">←</button>
                             {examData.map((block, index) => (
-                                <div key={index}>
+                                <div key={index} className="exam-block">
                                     <label className="custom-label">Tema:</label>
                                     <select name="topicId" value={block.topicId} onChange={(e) => handleExamInputChange(index, e)} required>
                                         <option value="">Selecciona un tema</option>
