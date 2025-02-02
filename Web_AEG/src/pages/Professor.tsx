@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {jwtDecode} from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import ProfessorNavbar from '../components/ProfessorNavbar';
 import Footer from '../components/Footer';
 import Notification from '../components/Notification';
@@ -9,8 +9,8 @@ import '../css/professor.css';
 
 const ProfessorPage = () => {
     const [activeForm, setActiveForm] = useState('');
-    const [professorId, setProfessorId] = useState<number | null>(null); // Estado para almacenar el ID del profesor
-    const [isHeadOfAssignment, setIsHeadOfAssignment] = useState(false); // Estado para almacenar si es líder de asignatura
+    const [professorId, setProfessorId] = useState<number | null>(null);
+    const [isHeadOfAssignment, setIsHeadOfAssignment] = useState(false);
     const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
     const [formData, setFormData] = useState({
         difficulty: '',
@@ -18,46 +18,47 @@ const ProfessorPage = () => {
         questionText: '',
         topicId: '',
     });
-    const [topics, setTopics] = useState([]); // Estado para almacenar los temas disponibles
-    const [questions, setQuestions] = useState([]); // Estado para almacenar las preguntas disponibles
+    const [topics, setTopics] = useState([]);
+    const [questions, setQuestions] = useState([]);
 
-    // Decodificar el token y obtener el professorId y isHeadOfAssignment
+    // Obtiene el ID del profesor desde el token almacenado en localStorage
     useEffect(() => {
         try {
-            const token = localStorage.getItem('token'); // Cambia si usas otro almacenamiento
+            const token = localStorage.getItem('token');
             if (token) {
-                const decoded: any = jwtDecode(token); // Decodifica el token
-                console.log('Token decodificado:', decoded);
+                const decoded: any = jwtDecode(token);
                 if (decoded.professorId) {
-                    setProfessorId(decoded.professorId); // Extrae el professorId
-                    setIsHeadOfAssignment(decoded.IsHeadOfAssignment); // Extrae isHeadOfAssignment
-                    console.log('IsHeadOfAssignment:', decoded.IsHeadOfAssignment);
+                    setProfessorId(decoded.professorId);
+                    setIsHeadOfAssignment(decoded.IsHeadOfAssignment);
+                    console.log('Profesor ID:', decoded.professorId);
                 } else {
                     console.error('El token no contiene professorId.');
-                    alert('No se pudo obtener la información del profesor. Por favor, inicia sesión nuevamente.');
+                    alert('No se pudo obtener la información del profesor. Inicia sesión nuevamente.');
                 }
             } else {
                 console.error('No se encontró ningún token en localStorage.');
-                alert('Por favor, inicia sesión para continuar.');
+                alert('Inicia sesión para continuar.');
             }
         } catch (error) {
             console.error('Error al decodificar el token:', error);
-            alert('Hubo un error al procesar tu sesión. Por favor, inicia sesión nuevamente.');
+            alert('Hubo un error al procesar tu sesión. Inicia sesión nuevamente.');
         }
     }, []);
 
-    // Obtener los temas desde la base de datos
+    // Carga los temas disponibles
     useEffect(() => {
         fetchTopics(setTopics, setNotification);
     }, []);
 
-    // Obtener las preguntas cuando se selecciona "viewQuestions"
+    // Carga las preguntas cuando se selecciona "Ver Preguntas"
     useEffect(() => {
-        if (activeForm === 'viewQuestions') {
-            fetchQuestions(setQuestions, setNotification);
+        if (activeForm === 'viewQuestions' && professorId) {
+            fetchQuestions(professorId, setQuestions, setNotification);
+            console.log('Preguntas obtenidas:', questions);
         }
-    }, [activeForm]);
+    }, [activeForm, professorId]);
 
+    // Manejo de cambios en los inputs
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData({
@@ -66,11 +67,12 @@ const ProfessorPage = () => {
         });
     };
 
+    // Manejo del envío del formulario de agregar preguntas
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!professorId) {
-            alert('No se pudo identificar al profesor. Por favor, inicie sesión nuevamente.');
+            alert('No se pudo identificar al profesor. Inicia sesión nuevamente.');
             return;
         }
 
@@ -79,14 +81,14 @@ const ProfessorPage = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`, // Envía el token en el encabezado
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 },
                 body: JSON.stringify({
                     difficulty: parseInt(formData.difficulty),
                     type: formData.type,
                     questionText: formData.questionText,
                     topicId: parseInt(formData.topicId),
-                    professorId: professorId, // Usa el ID del profesor extraído del token
+                    professorId: professorId,
                 }),
             });
 
@@ -123,6 +125,7 @@ const ProfessorPage = () => {
                 </div>
                 <div className="form-container">
                     {notification && <Notification message={notification.message} type={notification.type} />}
+
                     {activeForm === 'addQuestion' && (
                         <form onSubmit={handleSubmit} className="professor-form">
                             <h2>Añadir Pregunta</h2>
@@ -146,12 +149,7 @@ const ProfessorPage = () => {
                             </div>
                             <div>
                                 <label className="custom-label">Texto de la Pregunta:</label>
-                                <textarea
-                                    name="questionText"
-                                    value={formData.questionText}
-                                    onChange={handleInputChange}
-                                    required
-                                />
+                                <textarea name="questionText" value={formData.questionText} onChange={handleInputChange} required />
                             </div>
                             <div>
                                 <label className="custom-label">Tema:</label>
@@ -167,6 +165,7 @@ const ProfessorPage = () => {
                             <button type="submit">Enviar Pregunta</button>
                         </form>
                     )}
+
                     {activeForm === 'viewQuestions' && (
                         <div className="list-container">
                             <h2>Ver Preguntas</h2>
@@ -183,12 +182,6 @@ const ProfessorPage = () => {
                             ) : (
                                 <p>No hay preguntas disponibles.</p>
                             )}
-                        </div>
-                    )}
-                    {activeForm === 'editProfile' && (
-                        <div>
-                            <h2>Editar Perfil</h2>
-                            {/* Aquí puedes agregar la lógica para editar el perfil */}
                         </div>
                     )}
                 </div>

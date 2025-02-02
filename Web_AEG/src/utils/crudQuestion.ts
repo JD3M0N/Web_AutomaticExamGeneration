@@ -1,24 +1,26 @@
-export const fetchQuestions = async (
-    setQuestions: React.Dispatch<React.SetStateAction<any[]>>,
-    setNotification: React.Dispatch<React.SetStateAction<{ message: string; type: 'success' | 'error' } | null>>
-) => {
+export const fetchQuestions = async (professorId: number, setQuestions: Function, setNotification: Function) => {
     try {
-        const response = await fetch('http://localhost:5024/api/Question', {
+        const response = await fetch(`http://localhost:5024/api/Question`, {
             method: 'GET',
             headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`, // Envía el token en el encabezado
             },
         });
-        if (response.ok) {
-            const data = await response.json();
-            setQuestions(data);
-        } else {
-            const errorData = await response.json();
-            setNotification({ message: errorData.message || 'Error al obtener las preguntas.', type: 'error' });
+
+        if (!response.ok) {
+            throw new Error(`Error en la respuesta del servidor: ${response.status}`);
         }
+
+        const data = await response.json();
+
+        // Verifica si los datos están encapsulados en $values
+        const questionsArray = data.$values || []; 
+
+        console.log("Preguntas obtenidas:", questionsArray); // Para depuración
+        setQuestions(questionsArray);
     } catch (error) {
-        console.error('Error al conectar con el servidor:', error);
-        setNotification({ message: 'Hubo un problema con la conexión al servidor.', type: 'error' });
+        console.error('Error al obtener las preguntas:', error);
+        setNotification({ message: 'Error al obtener las preguntas.', type: 'error' });
     }
 };
