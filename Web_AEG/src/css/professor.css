@@ -1,3 +1,4 @@
+/* Página y estructura general */
 .professor-page {
     padding: 2rem;
     text-align: center;
@@ -7,6 +8,7 @@
     display: flex;
 }
 
+/* Sidebar */
 .sidebar {
     width: 200px;
     background-color: #f5f5f5;
@@ -35,6 +37,7 @@
     background-color: #8E1A28; /* Un tono más oscuro al pasar el cursor */
 }
 
+/* Contenedor de formularios */
 .form-container {
     flex-grow: 1;
     background: #fff;
@@ -44,6 +47,7 @@
     border-radius: 8px;
 }
 
+/* Estilos del formulario del profesor */
 .professor-form {
     display: flex;
     flex-direction: column;
@@ -80,19 +84,24 @@
 
 .professor-form button:hover {
     transform: scale(1.05);
-    background-color: #8E1A28; /* Un tono más oscuro al pasar el cursor */
+    background-color: #8E1A28;
 }
 
+/* Etiquetas personalizadas */
 .custom-label {
-    color: rgba(0, 0, 0, 0.4); /* Cambia el color de la etiqueta */
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #333;
 }
 
+/* Estilos para contenedores de listas y tablas */
 .list-container {
     margin-top: 2rem;
     text-align: left;
-    max-height: 400px; /* Limita la altura del contenedor */
-    overflow-y: auto; /* Añade desplazamiento vertical */
-    padding-right: 1rem; /* Añade espacio para el scrollbar */
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 1rem;
 }
 
 .list-container ul {
@@ -116,6 +125,7 @@
     color: #333;
 }
 
+/* Animación */
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -141,7 +151,7 @@ table th, table td {
     padding: 1rem;
     text-align: left;
     border-bottom: 1px solid #ddd;
-    color: #333; /* Cambia el color del texto a un tono oscuro para mejor visibilidad */
+    color: #333;
 }
 
 table th {
@@ -158,6 +168,7 @@ table tr:hover {
     background-color: #f1f1f1;
 }
 
+/* Botón atrás */
 .back-button {
     background-color: #A51C30;
     color: #fff;
@@ -170,9 +181,10 @@ table tr:hover {
 }
 
 .back-button:hover {
-    background-color: #8E1A28; /* Un tono más oscuro al pasar el cursor */
+    background-color: #8E1A28;
 }
 
+/* Bloque de examen y grupo de botones */
 .exam-block {
     margin-bottom: 1rem;
     padding: 1rem;
@@ -184,12 +196,12 @@ table tr:hover {
 
 .button-group {
     display: flex;
-    gap: 1rem; /* Espacio entre los botones */
+    gap: 1rem;
     justify-content: center;
-  }
-  
-  .validate-button,
-  .deny-button {
+}
+
+.validate-button,
+.deny-button {
     padding: 1.2rem 1.5rem;
     font-size: 3.6rem;
     border: none;
@@ -198,19 +210,79 @@ table tr:hover {
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-  
-  .validate-button {
+}
+
+.validate-button {
     background-color: green;
     color: white;
-  }
-  
-  .deny-button {
+}
+
+.deny-button {
     background-color: red;
     color: white;
-  }
-  
-  .validate-button i,
-  .deny-button i {
-    font-size: 1.2rem; /* Asegura que el ícono sea grande */
-  }
+}
+
+.validate-button i,
+.deny-button i {
+    font-size: 1.2rem;
+}
+
+/* Formulario personalizado (por ejemplo, para crear exámenes) */
+.custom-form {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 2rem;
+    max-width: 600px;
+    margin: 2rem auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.custom-form h2 {
+    font-family: 'Orbitron', sans-serif;
+    color: #a51c30;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.custom-textarea,
+.custom-select,
+.custom-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.custom-textarea:focus,
+.custom-select:focus,
+.custom-input:focus {
+    outline: none;
+    border-color: #a51c30;
+    box-shadow: 0 0 5px rgba(165, 28, 48, 0.5);
+}
+
+.submit-button {
+    background-color: #a51c30;
+    color: #fff;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: block;
+    margin: 0 auto;
+    transition: background-color 0.3s;
+}
+
+.submit-button:hover {
+    background-color: #8e162a;
+}
+

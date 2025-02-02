@@ -9,9 +9,9 @@ import AssignmentSection from '../components/AssignmentSection';
 import TopicSection from '../components/TopicSection';
 import { fetchTopics } from '../utils/crudTopic';
 import { fetchAdmins } from '../utils/crudAdmin';
-import { fetchStudents} from '../utils/crudStudent';
+import { fetchStudents } from '../utils/crudStudent';
 import { fetchProfessors } from '../utils/crudProfessor';
-import { fetchAssignments} from '../utils/crudAssignment';
+import { fetchAssignments } from '../utils/crudAssignment';
 import '../css/admin.css';
 
 const AdminPage = () => {
@@ -31,6 +31,49 @@ const AdminPage = () => {
         assignmentId: '',
     });
 
+    // Al inicio del componente, junto a los demás estados:
+    const [enrollData, setEnrollData] = useState({
+        studentId: '',
+        assignmentId: '',
+    });
+
+    // Maneja el cambio de los campos del formulario de enroll
+    const handleEnrollChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setEnrollData({ ...enrollData, [name]: value });
+    };
+
+    // Maneja el submit del formulario de enroll
+    const handleEnrollSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const endpoint = 'http://localhost:5024/api/Enroll';
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    s_ID: Number(enrollData.studentId),
+                    a_ID: Number(enrollData.assignmentId),
+                }),
+            });
+
+            if (response.ok) {
+                setNotification({ message: 'Estudiante asignado a la asignatura exitosamente.', type: 'success' });
+                // Limpia el formulario si lo deseas
+                setEnrollData({ studentId: '', assignmentId: '' });
+            } else {
+                const errorData = await response.json();
+                setNotification({ message: errorData.message || 'Error al asignar.', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Error al asignar estudiante:', error);
+            setNotification({ message: 'Hubo un problema con la conexión al servidor.', type: 'error' });
+        }
+    };
+
     const [showAddTopicModal, setShowAddTopicModal] = useState(false);
 
     useEffect(() => {
@@ -39,7 +82,7 @@ const AdminPage = () => {
     }, []);
 
     //----------------------------------
-    
+
 
     //manejo de ingreso de datos de admin
 
@@ -58,7 +101,7 @@ const AdminPage = () => {
         password: '',
     });
 
-   
+
 
     const [students, setStudents] = useState([]);
     const [professors, setProfessors] = useState([]);
@@ -83,22 +126,22 @@ const AdminPage = () => {
         grade: '',
     });
 
-   const [showAddProfessorModal, setShowAddProfessorModal] = useState(false);
-   const [newProfessorData, setNewProfessorData] = useState({
-       name: '',
-       email: '',
-       password: '',
-       specialization: '',
-   });
+    const [showAddProfessorModal, setShowAddProfessorModal] = useState(false);
+    const [newProfessorData, setNewProfessorData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        specialization: '',
+    });
 
-   const [showUpdateProfessorModal, setShowUpdateProfessorModal] = useState(false);
-   const [currentProfessorId, setCurrentProfessorId] = useState<number | null>(null);
-   const [updateProfessorData, setUpdateProfessorData] = useState({
-       name: '',
-       email: '',
-       password: '',
-       specialization: '',
-   });
+    const [showUpdateProfessorModal, setShowUpdateProfessorModal] = useState(false);
+    const [currentProfessorId, setCurrentProfessorId] = useState<number | null>(null);
+    const [updateProfessorData, setUpdateProfessorData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        specialization: '',
+    });
 
     const [showAddAssignmentModal, setShowAddAssignmentModal] = useState(false);
     const [newAssignmentData, setNewAssignmentData] = useState({
@@ -155,11 +198,11 @@ const AdminPage = () => {
     };
 
 
-    
+
 
     //-----------------------------------------------------------------------------
 
-    
+
 
     return (
         <div className="admin-page">
@@ -172,21 +215,61 @@ const AdminPage = () => {
                     <button onClick={() => fetchAssignments(setAssignments, setNotification, setActiveForm)}>Asignaturas</button>
                     <button onClick={() => setActiveForm('teach')}>Asignar Profesor a Asignatura</button>
                     <button onClick={() => setActiveForm('topic')}>Añadir Topic</button>
-
+                    <button onClick={() => setActiveForm('enroll')}>Asignar Estudiante a Asignatura</button>
                 </div>
                 <div className="form-container">
                     {notification && <Notification message={notification.message} type={notification.type} />}
+                    {activeForm === 'enroll' && (
+                        <form onSubmit={handleEnrollSubmit} className="admin-form">
+                            <h2>Asignar Estudiante a Asignatura</h2>
+                            <div>
+                                <label className="custom-label">Estudiante:</label>
+                                <select
+                                    name="studentId"
+                                    value={enrollData.studentId}
+                                    onChange={handleEnrollChange}
+                                    required
+                                    className="custom-select"
+                                >
+                                    <option value="">Selecciona un estudiante</option>
+                                    {students.map((student: { id: number, name: string }) => (
+                                        <option key={student.id} value={student.id}>
+                                            {student.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="custom-label">Asignatura:</label>
+                                <select
+                                    name="assignmentId"
+                                    value={enrollData.assignmentId}
+                                    onChange={handleEnrollChange}
+                                    required
+                                    className="custom-select"
+                                >
+                                    <option value="">Selecciona una asignatura</option>
+                                    {assignments.map((assignment: { id: number, name: string }) => (
+                                        <option key={assignment.id} value={assignment.id}>
+                                            {assignment.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <button type="submit" className="submit-button">Asignar Estudiante</button>
+                        </form>
+                    )}
                     {activeForm === 'viewAssignments' && (
                         <AssignmentSection
-                        assignments={assignments}
-                        setAssignments={setAssignments}
-                        setNotification={setNotification}
-                        setActiveForm={setActiveForm}
-                        showAddAssignmentModal={showAddAssignmentModal}
-                        setShowAddAssignmentModal={setShowAddAssignmentModal}
-                        newAssignmentData={newAssignmentData}
-                        setNewAssignmentData={setNewAssignmentData}
-                    />
+                            assignments={assignments}
+                            setAssignments={setAssignments}
+                            setNotification={setNotification}
+                            setActiveForm={setActiveForm}
+                            showAddAssignmentModal={showAddAssignmentModal}
+                            setShowAddAssignmentModal={setShowAddAssignmentModal}
+                            newAssignmentData={newAssignmentData}
+                            setNewAssignmentData={setNewAssignmentData}
+                        />
                     )}
                     {activeForm === 'teach' && (
                         <form onSubmit={handleTeachSubmit} className="admin-form">
@@ -221,39 +304,39 @@ const AdminPage = () => {
                         </form>
                     )}
                     {activeForm === 'topic' && (
-                       <TopicSection
-                       topics={topics}
-                       setTopics={setTopics}
-                       setNotification={setNotification}
-                       setActiveForm={setActiveForm}
-                       showAddTopicModal={showAddTopicModal}
-                       setShowAddTopicModal={setShowAddTopicModal}
-                       newTopicData={newTopicData}
-                       setNewTopicData={setNewTopicData}
-                       assignments={assignments}
-                   />
+                        <TopicSection
+                            topics={topics}
+                            setTopics={setTopics}
+                            setNotification={setNotification}
+                            setActiveForm={setActiveForm}
+                            showAddTopicModal={showAddTopicModal}
+                            setShowAddTopicModal={setShowAddTopicModal}
+                            newTopicData={newTopicData}
+                            setNewTopicData={setNewTopicData}
+                            assignments={assignments}
+                        />
                     )}
                     {activeForm === 'viewStudents' && (
                         <StudentSection
-                        students={students}
-                        setStudents={setStudents}
-                        setNotification={setNotification}
-                        setActiveForm={setActiveForm}
-                        showAddStudentModal={showAddStudentModal}
-                        setShowAddStudentModal={setShowAddStudentModal}
-                        newStudentData={newStudentData}
-                        setNewStudentData={setNewStudentData}
-                        showUpdateStudentModal={showUpdateStudentModal}
-                        setShowUpdateStudentModal={setShowUpdateStudentModal}
-                        currentStudentId={currentStudentId}
-                        setCurrentStudentId={setCurrentStudentId}
-                        updateStudentData={updateStudentData}
-                        setUpdateStudentData={setUpdateStudentData}
-                    />
+                            students={students}
+                            setStudents={setStudents}
+                            setNotification={setNotification}
+                            setActiveForm={setActiveForm}
+                            showAddStudentModal={showAddStudentModal}
+                            setShowAddStudentModal={setShowAddStudentModal}
+                            newStudentData={newStudentData}
+                            setNewStudentData={setNewStudentData}
+                            showUpdateStudentModal={showUpdateStudentModal}
+                            setShowUpdateStudentModal={setShowUpdateStudentModal}
+                            currentStudentId={currentStudentId}
+                            setCurrentStudentId={setCurrentStudentId}
+                            updateStudentData={updateStudentData}
+                            setUpdateStudentData={setUpdateStudentData}
+                        />
 
                     )}
                     {activeForm === 'viewProfessors' && (
-                            <ProfessorSection
+                        <ProfessorSection
                             professors={professors}
                             setProfessors={setProfessors}
                             setNotification={setNotification}
@@ -268,26 +351,26 @@ const AdminPage = () => {
                             setCurrentProfessorId={setCurrentProfessorId}
                             updateProfessorData={updateProfessorData}
                             setUpdateProfessorData={setUpdateProfessorData}
-                            />
-                        )}
+                        />
+                    )}
 
                     {activeForm === 'viewAdmins' && (
                         <AdminSection
-                        admins={admins}
-                        setAdmins={setAdmins}
-                        setNotification={setNotification}
-                        setActiveForm={setActiveForm}
-                        showAddAdminModal={showAddAdminModal}
-                        setShowAddAdminModal={setShowAddAdminModal}
-                        newAdminData={newAdminData}
-                        setNewAdminData={setNewAdminData}
-                        showUpdateAdminModal={showUpdateAdminModal}
-                        setShowUpdateAdminModal={setShowUpdateAdminModal}
-                        currentAdminId={currentAdminId}
-                        setCurrentAdminId={setCurrentAdminId}
-                        updateAdminData={updateAdminData}
-                        setUpdateAdminData={setUpdateAdminData}
-                    />
+                            admins={admins}
+                            setAdmins={setAdmins}
+                            setNotification={setNotification}
+                            setActiveForm={setActiveForm}
+                            showAddAdminModal={showAddAdminModal}
+                            setShowAddAdminModal={setShowAddAdminModal}
+                            newAdminData={newAdminData}
+                            setNewAdminData={setNewAdminData}
+                            showUpdateAdminModal={showUpdateAdminModal}
+                            setShowUpdateAdminModal={setShowUpdateAdminModal}
+                            currentAdminId={currentAdminId}
+                            setCurrentAdminId={setCurrentAdminId}
+                            updateAdminData={updateAdminData}
+                            setUpdateAdminData={setUpdateAdminData}
+                        />
                     )}
                 </div>
             </div>
