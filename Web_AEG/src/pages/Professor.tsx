@@ -155,27 +155,33 @@ const ProfessorPage = () => {
         }
 
         try {
-            const selectedQuestions = [];
-            for (const block of examData) {
-                if (block.topicId && block.difficulty) {
-                    const filteredQuestions = questions.filter(
-                        (q: { topicId: number; difficulty: number }) =>
-                            q.topicId === parseInt(block.topicId) && q.difficulty === parseInt(block.difficulty)
-                    );
-                    if (filteredQuestions.length > 0) {
-                        const randomQuestion = filteredQuestions[Math.floor(Math.random() * filteredQuestions.length)];
-                        selectedQuestions.push(randomQuestion);
-                    }
-                }
-            }
+            const response = await fetch('http://localhost:5024/api/Exam/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
+                body: JSON.stringify({
+                    professorId: professorId,
+                    assignmentId: selectedAssignment,
+                    questions: examData.filter(block => block.topicId && block.difficulty),
+                }),
+            });
 
-            if (selectedQuestions.length < 3) {
-                alert('No se encontraron suficientes preguntas para los criterios seleccionados.');
+            if (!response.ok) {
+                const errorData = await response.json();
+                alert(`Error: ${errorData.message}`);
                 return;
             }
 
-            console.log('Preguntas seleccionadas para el examen:', selectedQuestions);
-            alert('Examen creado exitosamente.');
+            alert('Examen creado exitosamente');
+            setExamData([
+                { topicId: '', difficulty: '' },
+                { topicId: '', difficulty: '' },
+                { topicId: '', difficulty: '' },
+                { topicId: '', difficulty: '' },
+                { topicId: '', difficulty: '' },
+            ]);
         } catch (error) {
             console.error('Error al crear el examen:', error);
             alert('Hubo un error al intentar crear el examen.');
