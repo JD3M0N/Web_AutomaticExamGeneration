@@ -19,7 +19,7 @@ const ProfessorNavbar = () => {
             </div>
             <nav className="navbar">
                 <ul>
-                    <li className="admin-link">Professor</li>
+                    <li className="admin-link">Profesor</li>
                     <li>
                         <button className="logout-button" onClick={handleLogout}>Cerrar Sesión</button>
                     </li>
