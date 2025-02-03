@@ -9,6 +9,7 @@ import Features from './pages/Features';
 import Statistics from './pages/Statistics';
 import ExamsPage from './pages/ExamsPage';
 import CompareExamsPage from './pages/CompareExamsPage';
+import ProfessorReviewsPage from './pages/ProfessorReviewsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -30,6 +31,8 @@ function App() {
           <Route path="/exams/:assignmentId" element={<ExamsPage />} />
 
           <Route path="/compare-exams" element={<CompareExamsPage />} />
+
+          <Route path="/professor-reviews" element={<ProfessorReviewsPage />} />
 
           {/* Rutas protegidas */}
           <Route

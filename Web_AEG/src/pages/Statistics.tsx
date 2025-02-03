@@ -52,6 +52,11 @@ const Statistics = () => {
         navigate(`/compare-exams`);
     };
 
+    // Redirigir a la página de revisores de exámenes
+    const goToProfessorReviewsPage = () => {
+        navigate(`/professor-reviews`);
+    };
+
     return (
         <div>
             <Navbar />
@@ -78,7 +83,7 @@ const Statistics = () => {
                     <button>Desempeño en Exámenes</button>
                     <button>Preguntas No Utilizadas</button>
                     <button onClick={goToCompareExamsPage}>Comparación de Exámenes</button>
-                    <button>Revisores de Exámenes</button>
+                    <button onClick={goToProfessorReviewsPage}>Revisores de Exámenes</button>
                 </div>
             </div>
         </div>

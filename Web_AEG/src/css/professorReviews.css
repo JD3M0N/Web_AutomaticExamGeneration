@@ -1,0 +1,30 @@
+.professor-reviews-page {
+    padding: 2rem;
+    text-align: center;
+}
+
+.professor-reviews-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.professor-reviews-table th,
+.professor-reviews-table td {
+    border: 1px solid #ddd;
+    padding: 0.8rem;
+    text-align: center;
+}
+
+.professor-reviews-table th {
+    background-color: #A51C30;
+    color: white;
+}
+
+.professor-reviews-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.professor-reviews-table tr:hover {
+    background-color: #f1f1f1;
+}
