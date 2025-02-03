@@ -94,7 +94,7 @@ const ProfessorPage = () => {
             });
         }
     }, [professorId]);
-    
+
     const fetchUnvalidatedExams = async () => {
         try {
             const response = await fetch(`http://localhost:5024/api/Professor/${professorId}/unvalidated-exams`, {
@@ -400,6 +400,20 @@ const ProfessorPage = () => {
         setActiveForm('validateExams');
     };
 
+    // ----------Modal para la visualizacion de las preguntas
+    const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
+    const [showQuestionModal, setShowQuestionModal] = useState(false);
+
+    const openQuestionModal = (question: any) => {
+        setSelectedQuestion(question);
+        setShowQuestionModal(true);
+    };
+
+    const closeQuestionModal = () => {
+        setShowQuestionModal(false);
+        setSelectedQuestion(null);
+    };
+
     return (
         <div className="professor-page">
             <ProfessorNavbar />
@@ -527,39 +541,64 @@ const ProfessorPage = () => {
                     )}
                     {activeForm === 'viewQuestions' && (
                         <div className="list-container">
-                            {questions.length > 0 ? (
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Email del Profesor</th>
-                                            <th>Texto de la Pregunta</th>
-                                            <th>Dificultad</th>
-                                            <th>Tipo</th>
-                                            <th>Tema</th>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Email del Profesor</th>
+                                        <th>Texto de la Pregunta</th>
+                                        <th>Dificultad</th>
+                                        <th>Tipo</th>
+                                        <th>Tema</th>
+                                        <th>Ver</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {questions.map((question: any) => (
+                                        <tr key={question.id}>
+                                            <td>{question.professor?.email || 'Desconocido'}</td>
+                                            <td>{question.questionText}</td>
+                                            <td>{question.difficulty}</td>
+                                            <td>{question.type}</td>
+                                            <td>{question.topic?.name || 'Desconocido'}</td>
+                                            <td>
+                                                <button
+                                                    style={{ backgroundColor: '#ADD8E6', border: 'none', padding: '0.5rem', borderRadius: '4px' }}
+                                                    onClick={() => openQuestionModal(question)}
+                                                >
+                                                    <i className="fa fa-book" aria-hidden="true"></i>
+                                                </button>
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        {questions.map((question: {
-                                            id: number,
-                                            questionText: string,
-                                            difficulty: number,
-                                            type: string,
-                                            topicId: number,
-                                            professor?: { email: string }
-                                        }) => (
-                                            <tr key={question.id}>
-                                                <td>{question.professor?.email || 'Desconocido'}</td>
-                                                <td>{question.questionText}</td>
-                                                <td>{question.difficulty}</td>
-                                                <td>{question.type}</td>
-                                                <td>{question.topic?.name || 'Desconocido'}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            ) : (
-                                <p>No hay preguntas disponibles.</p>
-                            )}
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+
+                    {showQuestionModal && selectedQuestion && (
+                        <div className="modal" style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            background: 'rgba(0,0,0,0.5)',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            zIndex: 1000
+                        }}>
+                            <div className="modal-content" style={{
+                                background: '#fff',
+                                padding: '2rem',
+                                borderRadius: '8px',
+                                maxWidth: '600px',
+                                width: '90%'
+                            }}>
+                                <h2>Pregunta</h2>
+                                <p>{selectedQuestion.questionText}</p>
+                                <button onClick={closeQuestionModal}>Cerrar</button>
+                            </div>
                         </div>
                     )}
 
