@@ -303,8 +303,54 @@ const AdminPage = () => {
         }
     }, [activeForm]);
 
+    const [examPerformance, setExamPerformance] = useState<any[]>([]);
+    const [selectedExamId, setSelectedExamId] = useState('');
+    const [showPerformance, setShowPerformance] = useState(false);
 
-    const [activeTab, setActiveTab] = useState<'examStats' | 'mostUsed'>('examStats');
+    const handleFetchExamPerformance = async () => {
+        if (!selectedExamId) {
+            setNotification({ message: 'Por favor, selecciona un examen', type: 'error' });
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:5024/api/Stats/exam-performance/${selectedExamId}`);
+            if (response.ok) {
+                const data = await response.json();
+                const performance = data.$values || [];
+                setExamPerformance(performance);
+                setShowPerformance(true);
+            } else {
+                setNotification({ message: 'Error al obtener el rendimiento del examen', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Error en la petición:', error);
+            setNotification({ message: 'Error al conectar con el servidor', type: 'error' });
+        }
+    };
+
+    const [unusedQuestions, setUnusedQuestions] = useState<any[]>([]);
+    const [showUnusedQuestions, setShowUnusedQuestions] = useState(false);
+
+    const handleFetchUnusedQuestions = async () => {
+        try {
+            const response = await fetch('http://localhost:5024/api/Stats/unused-questions');
+            if (response.ok) {
+                const data = await response.json();
+                const questions = data.$values || [];
+                setUnusedQuestions(questions);
+                setShowUnusedQuestions(true);
+                setActiveTab('unused');
+            } else {
+                setNotification({ message: 'Error al obtener las preguntas no utilizadas', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Error en la petición:', error);
+            setNotification({ message: 'Error al conectar con el servidor', type: 'error' });
+        }
+    };
+
+    const [activeTab, setActiveTab] = useState<'examStats' | 'mostUsed' | 'unused'>('examStats');
     return (
         <div className="admin-page">
             <AdminNavbar />
@@ -324,6 +370,56 @@ const AdminPage = () => {
                     {activeForm === 'examStats' && (
                         <div className="stats-container">
                             <h2>Estadísticas de Exámenes</h2>
+                            <div>
+                                <label className="custom-label">Selecciona un Examen:</label>
+                                <select
+                                    value={selectedExamId}
+                                    onChange={(e) => {
+                                        console.log('Examen seleccionado:', e.target.value); // Agregar este log
+                                        setSelectedExamId(e.target.value);
+                                    }}
+                                    className="custom-select"
+                                >
+                                    <option value="">Selecciona un examen</option>
+                                    {examStats.map((exam: { examId: number }) => (
+                                        <option key={exam.examId} value={exam.examId}>
+                                            Examen {exam.examId}
+                                        </option>
+                                    ))}
+                                </select>
+                                <button
+                                    onClick={handleFetchExamPerformance}
+                                    className="stats-button"
+                                >
+                                    Ver Rendimiento del Examen
+                                </button>
+                            </div>
+
+                            {showPerformance && examPerformance.length > 0 && (
+                                <div className="performance-stats">
+                                    <h3>Rendimiento del Examen</h3>
+                                    <table className="stats-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Dificultad</th>
+                                                <th>Total Preguntas</th>
+                                                <th>Tasa de Acierto</th>
+                                                <th>Tema</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {examPerformance.map((perf, index) => (
+                                                <tr key={index}>
+                                                    <td>{perf.difficulty}</td>
+                                                    <td>{perf.totalQuestions}</td>
+                                                    <td>{(perf.successRate * 100).toFixed(2)}%</td>
+                                                    <td>{perf.topicName}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                             <div>
                                 <label className="custom-label">Selecciona un Profesor:</label>
                                 <select
@@ -406,8 +502,46 @@ const AdminPage = () => {
                                     >
                                         Ver Preguntas Más Usadas
                                     </button>
+                                    <button
+                                        onClick={() => {
+                                            handleFetchUnusedQuestions();
+                                            setActiveTab('unused');
+                                        }}
+                                        className={`tab-button ${activeTab === 'unused' ? 'active' : ''}`}
+                                    >
+                                        Ver Preguntas No Utilizadas
+                                    </button>
                                 </div>
                             </div>
+                            {activeTab === 'unused' && unusedQuestions.length > 0 && (
+                                <div className="unused-questions">
+                                    <h3>Preguntas No Utilizadas</h3>
+                                    <table className="stats-table">
+                                        <thead>
+                                            <tr>
+                                                <th>ID Pregunta</th>
+                                                <th>Texto</th>
+                                                <th>Dificultad</th>
+                                                <th>Tipo</th>
+                                                <th>Tema</th>
+                                                <th>Profesor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {unusedQuestions.map((question) => (
+                                                <tr key={question.id}>
+                                                    <td>{question.id}</td>
+                                                    <td>{question.questionText}</td>
+                                                    <td>{question.difficulty}</td>
+                                                    <td>{question.type}</td>
+                                                    <td>{question.topic?.name || 'Desconocido'}</td>
+                                                    <td>{question.professor?.email || 'Desconocido'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
 
                             {activeTab === 'examStats' && examStats.length > 0 && (
                                 <table className="stats-table">
