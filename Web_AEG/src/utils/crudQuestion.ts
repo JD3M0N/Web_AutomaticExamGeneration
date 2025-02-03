@@ -1,6 +1,6 @@
 export const fetchQuestions = async (professorId: number, setQuestions: Function, setNotification: Function) => {
     try {
-      const response = await fetch(`http://localhost:5024/api/Question`, {
+      const response = await fetch('http://localhost:5024/api/Question', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -14,10 +14,9 @@ export const fetchQuestions = async (professorId: number, setQuestions: Function
   
       const data = await response.json();
   
-      // Verifica si los datos están encapsulados en $values
+      // Extrae la lista de preguntas desde $values
       const questionsArray = data.$values || [];
-  
-      console.log("Preguntas obtenidas:", questionsArray); // Para depuración
+      console.log("Preguntas obtenidas:", questionsArray);
   
       // Enriquecer cada pregunta obteniendo la información del profesor
       const enrichedQuestions = await Promise.all(

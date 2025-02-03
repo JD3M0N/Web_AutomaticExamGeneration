@@ -80,7 +80,7 @@ const ProfessorPage = () => {
 
     const fetchUnvalidatedExams = async () => {
         try {
-            const response = await fetch('http://localhost:5024/api/Professor/1/unvalidated-exams', {
+            const response = await fetch(`http://localhost:5024/api/Professor/${professorId}/unvalidated-exams`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ const ProfessorPage = () => {
                     exams.map(async (exam: any) => {
                         // Obtener los detalles del profesor
                         try {
-                            const profResponse = await fetch(`http://localhost:5024/api/Professor/${professorId}`, {
+                            const profResponse = await fetch(`http://localhost:5024/api/Professor/${exam.professorId}`, {
                                 method: 'GET',
                                 headers: { 'Content-Type': 'application/json' },
                             });
@@ -164,34 +164,29 @@ const ProfessorPage = () => {
     }, [activeForm, selectedAssignment]);
 
     // Función para validar o denegar un examen
-    const handleExamValidation = async (examId: number, validationState: boolean) => {
-        if (!professorId) return;
+    const handleExamValidation = async (examId: number, isValid: boolean) => {
+        if (!isHeadOfAssignment) {
+            setNotification({ message: "No tienes permisos para validar este examen.", type: "error" });
+            return;
+        }
+
         try {
-            const response = await fetch('http://localhost:5024/api/Validate', {
-                method: 'POST',
+            const response = await fetch(`http://localhost:5024/api/ExamValidation/${examId}?isValid=${isValid}`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 },
-                body: JSON.stringify({
-                    examId,
-                    professorId,
-                    observations: '',
-                    validationDate: new Date().toISOString(),
-                    validationState,
-                }),
             });
             if (response.ok) {
-                const data = await response.json();
-                setNotification({ message: `Examen ${validationState ? 'aprobado' : 'denegado'} exitosamente.`, type: 'success' });
-                // Remover de los exámenes sin validar (o actualizar el estado según el requerimiento)
                 setUnvalidatedExams(prev => prev.filter(exam => exam.id !== examId));
+                setNotification({ message: "Examen validado correctamente", type: "success" });
             } else {
                 const errorData = await response.json();
-                setNotification({ message: errorData.message || 'Error al validar el examen.', type: 'error' });
+                setNotification({ message: errorData.message || "Error al validar el examen", type: "error" });
             }
         } catch (error) {
-            setNotification({ message: 'Error al conectar con el servidor.', type: 'error' });
+            setNotification({ message: "Error al conectar con el servidor.", type: "error" });
         }
     };
 
@@ -204,6 +199,8 @@ const ProfessorPage = () => {
                 if (decoded.professorId) {
                     setProfessorId(decoded.professorId);
                     setIsHeadOfAssignment(decoded.IsHeadOfAssignment);
+                    console.log("ahora viene si es jefe de asignatura");
+                    console.log(isHeadOfAssignment);
                 } else {
                     alert('No se pudo obtener la información del profesor. Inicia sesión nuevamente.');
                 }
@@ -212,11 +209,36 @@ const ProfessorPage = () => {
             alert('Hubo un error al procesar tu sesión. Inicia sesión nuevamente.');
         }
     }, []);
+
+    // Decodificar el token y obtener el professorId y isHeadOfAssignment
+    useEffect(() => {
+        try {
+            const token = localStorage.getItem('token'); // Cambia si usas otro almacenamiento
+            if (token) {
+                const decoded: any = jwtDecode(token); // Decodifica el token
+                console.log('Token decodificado:', decoded);
+                if (decoded.professorId) {
+                    setProfessorId(decoded.professorId); // Extrae el professorId
+                    setIsHeadOfAssignment(decoded.IsHeadOfAssignment); // Extrae isHeadOfAssignment
+                    console.log('IsHeadOfAssignment:', decoded.IsHeadOfAssignment);
+                } else {
+                    console.error('El token no contiene professorId.');
+                    alert('No se pudo obtener la información del profesor. Por favor, inicia sesión nuevamente.');
+                }
+            } else {
+                console.error('No se encontró ningún token en localStorage.');
+                alert('Por favor, inicia sesión para continuar.');
+            }
+        } catch (error) {
+            console.error('Error al decodificar el token:', error);
+            alert('Hubo un error al procesar tu sesión. Por favor, inicia sesión nuevamente.');
+        }
+    }, []);
     // Carga los temas disponibles para el profesor logueado
     useEffect(() => {
         if (professorId) {
             fetchProfessorTopics(professorId, setTopics, setNotification);
-            fetchAssignmentsByProfessor(professorId, setAssignments, setNotification);
+            
         }
     }, [professorId]);
 
