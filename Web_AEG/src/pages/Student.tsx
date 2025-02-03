@@ -14,6 +14,7 @@ const StudentPage = () => {
     const [selectedExam, setSelectedExam] = useState<number | null>(null);
     const [questions, setQuestions] = useState<any[]>([]);
     const [answers, setAnswers] = useState<{ [key: number]: string }>({});
+    const [grades, setGrades] = useState<{ examId: number, grade: number }[]>([]);
 
 
     useEffect(() => {
@@ -135,7 +136,35 @@ const StudentPage = () => {
         }
     }; 
     
-
+    
+    const fetchStudentGrades = async () => {
+        if (!studentId) {
+            console.error("No se encontró studentId.");
+            return;
+        }
+    
+        try {
+            const response = await fetch(`http://localhost:5024/api/Grade/student/${studentId}/graded-exams`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                    "Content-Type": "application/json",
+                },
+            });
+    
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Notas recibidas:", data);
+    
+                setGrades(data.$values || []); // Almacena las calificaciones
+                setActiveForm("viewGrades"); // Cambia la vista a la tabla de calificaciones
+            } else {
+                console.error("Error al obtener calificaciones:", await response.json());
+            }
+        } catch (error) {
+            console.error("Error al conectar con el servidor:", error);
+        }
+    };    
 
 
     return (
@@ -144,7 +173,7 @@ const StudentPage = () => {
             <div className="student-content">
                 <div className="sidebar">
                     <button onClick={() => setActiveForm('accessExams')}>Acceder a Exámenes</button>
-                    <button onClick={() => setActiveForm('viewGrades')}>Consultar Calificaciones</button>
+                    <button onClick={fetchStudentGrades}>Consultar Calificaciones</button>
                     <button onClick={() => setActiveForm('requestRegrade')}>Solicitar Recalificación</button>
                 </div>
                 <div className="form-container">
@@ -257,6 +286,33 @@ const StudentPage = () => {
                             )}
                         </div>
                     )}
+
+                    {activeForm === "viewGrades" && (
+                        <div className="list-container">
+                            <h2>Calificaciones</h2>
+                            {grades.length > 0 ? (
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Exam ID</th>
+                                            <th>Grade</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {grades.map((grade, index) => (
+                                            <tr key={index}>
+                                                <td>{grade.examId}</td>
+                                                <td>{grade.grade}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <p>No hay calificaciones disponibles.</p>
+                            )}
+                        </div>
+                    )}
+
                 </div>
                                                         
             </div>
