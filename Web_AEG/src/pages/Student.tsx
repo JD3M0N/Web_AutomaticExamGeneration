@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import StudentNavbar from '../components/StudentNavbar';
-import { fetchStudentAssignments } from '../utils/crudExam';
+import { fetchStudentAssignments, fetchUnattemptedExams } from '../utils/crudExam';
 import { jwtDecode } from 'jwt-decode';
 import '../css/student.css';
 
 const StudentPage = () => {
     const [activeForm, setActiveForm] = useState('');
     const [assignments, setAssignments] = useState([]);
+    const [exams, setExams] = useState([]);
     const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
     const [studentId, setStudentId] = useState<number | null>(null);
+    const [selectedAssignment, setSelectedAssignment] = useState<number | null>(null);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -19,12 +21,11 @@ const StudentPage = () => {
                 const decoded: any = jwtDecode(token);
                 console.log('Token decodificado:', decoded);
     
-                // Extraer el studentId desde nameidentifier
                 const studentIdFromToken = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
     
                 if (studentIdFromToken) {
                     console.log('Student ID extraído:', studentIdFromToken);
-                    setStudentId(parseInt(studentIdFromToken)); // Convertir a número
+                    setStudentId(parseInt(studentIdFromToken));
                 } else {
                     console.error('No se encontró studentId en el token.');
                 }
@@ -44,6 +45,11 @@ const StudentPage = () => {
         if (activeForm === 'accessExams' && studentId) {
             console.log('Llamando a fetchStudentAssignments...');
             fetchStudentAssignments(studentId, setAssignments, setNotification);
+        } else if (activeForm.startsWith('viewExams_') && studentId) {
+            const assignmentId = parseInt(activeForm.split('_')[1]);
+            setSelectedAssignment(assignmentId);
+            console.log(`Llamando a fetchUnattemptedExams para la asignatura ${assignmentId}...`);
+            fetchUnattemptedExams(studentId, assignmentId, setExams, setNotification);
         }
     }, [activeForm, studentId]);
 
@@ -74,6 +80,31 @@ const StudentPage = () => {
                                 </ul>
                             ) : (
                                 <p>No hay asignaturas disponibles.</p>
+                            )}
+                        </div>
+                    )}
+                    {activeForm.startsWith('viewExams_') && selectedAssignment && (
+                        <div className="list-container">
+                            <h2>Exámenes disponibles</h2>
+                            {exams.length > 0 ? (
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Fecha</th>
+                                            <th>Total de Preguntas</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {exams.map((exam: { id: number, date: string, totalQuestions: number }) => (
+                                            <tr key={exam.id}>
+                                                <td>{exam.date}</td>
+                                                <td>{exam.totalQuestions}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <p>No hay exámenes disponibles para esta asignatura.</p>
                             )}
                         </div>
                     )}
