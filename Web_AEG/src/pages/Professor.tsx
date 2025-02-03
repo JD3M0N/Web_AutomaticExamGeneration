@@ -535,7 +535,7 @@ const ProfessorPage = () => {
                                                 <td>{question.questionText}</td>
                                                 <td>{question.difficulty}</td>
                                                 <td>{question.type}</td>
-                                                <td>{getTopicName(question.topicId)}</td>
+                                                <td>{question.topic?.name || 'Desconocido'}</td>
                                             </tr>
                                         ))}
                                     </tbody>
