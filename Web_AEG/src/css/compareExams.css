@@ -1,0 +1,30 @@
+.compare-exams-page {
+    padding: 2rem;
+    text-align: center;
+}
+
+.compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.compare-table th,
+.compare-table td {
+    border: 1px solid #ddd;
+    padding: 0.8rem;
+    text-align: center;
+}
+
+.compare-table th {
+    background-color: #A51C30;
+    color: white;
+}
+
+.compare-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.compare-table tr:hover {
+    background-color: #f1f1f1;
+}

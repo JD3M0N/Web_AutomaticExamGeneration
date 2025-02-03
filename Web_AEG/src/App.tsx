@@ -7,6 +7,8 @@ import Professor from './pages/Professor';
 import Student from './pages/Student';
 import Features from './pages/Features';
 import Statistics from './pages/Statistics';
+import ExamsPage from './pages/ExamsPage';
+import CompareExamsPage from './pages/CompareExamsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -23,7 +25,11 @@ function App() {
           {/* Página de funcionalidades */}
           <Route path="/features" element={<Features />} />
 
-          <Route path="/statistics" element={<Statistics />} /> 
+          <Route path="/statistics" element={<Statistics />} />
+
+          <Route path="/exams/:assignmentId" element={<ExamsPage />} />
+
+          <Route path="/compare-exams" element={<CompareExamsPage />} />
 
           {/* Rutas protegidas */}
           <Route
