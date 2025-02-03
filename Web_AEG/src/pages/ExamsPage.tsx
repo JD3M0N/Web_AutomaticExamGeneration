@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 import '../css/exams.css';
 
 const ExamsPage = () => {
@@ -12,7 +14,7 @@ const ExamsPage = () => {
         fetch(`http://localhost:5024/api/Stats/exams-by-assignment/${assignmentId}`)
             .then(response => response.json())
             .then(data => {
-                setExams(data.$values || []);
+                setExams(data.$values ?? []);
                 setLoading(false);
             })
             .catch(error => {
@@ -21,14 +23,48 @@ const ExamsPage = () => {
             });
     }, [assignmentId]);
 
+    // Función para generar y descargar el PDF
+    const downloadPDF = () => {
+        const doc = new jsPDF();
+        doc.text("Exámenes Generados", 14, 10);
+
+        const tableColumn = ["ID", "Profesor", "Fecha Creación", "Preguntas", "Dificultad", "Estado"];
+        const tableRows = [];
+
+        exams.forEach((exam: any) => {
+            const rowData = [
+                exam.examId,
+                exam.professorName,
+                new Date(exam.creationDate).toLocaleDateString(),
+                exam.totalQuestions,
+                exam.difficulty,
+                exam.state || 'Pendiente'
+            ];
+            tableRows.push(rowData);
+        });
+
+        (doc as any).autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: 20,
+        });
+
+        doc.save("examenes_generados.pdf");
+    };
+
     return (
         <div>
             <Navbar />
             <div className="exams-page">
                 <h1>Exámenes Generados</h1>
-                {loading && <p>Cargando...</p>}
-                {!loading && exams.length === 0 && <p>No hay exámenes disponibles.</p>}
-                {exams.length > 0 && (
+
+                <button className="download-pdf-button" onClick={downloadPDF}>
+                    Descargar PDF
+                </button>
+
+                {loading ? (
+                    <p>Cargando datos...</p>
+                ) : (
                     <table className="exams-table">
                         <thead>
                             <tr>
