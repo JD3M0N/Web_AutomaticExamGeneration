@@ -198,12 +198,113 @@ const AdminPage = () => {
     };
 
 
+    // Nuevo estado para guardar las estadísticas obtenidas
+    const [examStats, setExamStats] = useState<any[]>([]);
 
+    // Función para manejar la obtención de estadísticas
+    const handleFetchExamStats = async () => {
+        if (!enrollData.assignmentId) {
+            alert('Por favor, selecciona una asignatura.');
+            return;
+        }
+        try {
+            const response = await fetch(`http://localhost:5024/api/Stats/exams-by-assignment/${enrollData.assignmentId}`);
+            if (response.ok) {
+                const data = await response.json();
+                const stats = data.$values || [];
+                setExamStats(stats);
+            } else {
+                console.error('Error al obtener las estadísticas');
+            }
+        } catch (error) {
+            console.error('Error en la petición:', error);
+        }
+    };
 
     //-----------------------------------------------------------------------------
 
+    const [mostUsedQuestions, setMostUsedQuestions] = useState<any[]>([]);
+    const [showMostUsedQuestions, setShowMostUsedQuestions] = useState(false);
+
+    const handleFetchMostUsedQuestions = async () => {
+        if (!enrollData.assignmentId) {
+            alert('Por favor, selecciona una asignatura.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:5024/api/Stats/most-used-questions/${enrollData.assignmentId}`);
+            if (response.ok) {
+                const data = await response.json();
+                const questions = data.$values || [];
+                setMostUsedQuestions(questions);
+                setShowMostUsedQuestions(true);
+            } else {
+                setNotification({ message: 'Error al obtener las preguntas más usadas', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Error en la petición:', error);
+            setNotification({ message: 'Error al conectar con el servidor', type: 'error' });
+        }
+    };
+
+    const [validatedExams, setValidatedExams] = useState<any[]>([]);
+    const [selectedProfessorId, setSelectedProfessorId] = useState('');
+    const [showValidatedExams, setShowValidatedExams] = useState(false);
+
+    const handleFetchValidatedExams = async () => {
+        if (!selectedProfessorId) {
+            setNotification({ message: 'Por favor, selecciona un profesor', type: 'error' });
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:5024/api/Stats/validated-exams/${selectedProfessorId}`);
+            if (response.ok) {
+                const data = await response.json();
+                const exams = data.$values || [];
+                setValidatedExams(exams);
+                setShowValidatedExams(true);
+            } else {
+                setNotification({ message: 'Error al obtener los exámenes validados', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Error en la petición:', error);
+            setNotification({ message: 'Error al conectar con el servidor', type: 'error' });
+        }
+    };
+
+    useEffect(() => {
+        if (activeForm === 'examStats') {
+            // Cargar la lista de profesores
+            const fetchProfessorsData = async () => {
+                try {
+                    const response = await fetch('http://localhost:5024/api/Professor', {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        setProfessors(data.$values || []);
+                    } else {
+                        setNotification({ message: 'Error al cargar los profesores', type: 'error' });
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    setNotification({ message: 'Error al conectar con el servidor', type: 'error' });
+                }
+            };
+
+            fetchProfessorsData();
+        }
+    }, [activeForm]);
 
 
+    const [activeTab, setActiveTab] = useState<'examStats' | 'mostUsed'>('examStats');
     return (
         <div className="admin-page">
             <AdminNavbar />
@@ -216,9 +317,156 @@ const AdminPage = () => {
                     <button onClick={() => setActiveForm('teach')}>Asignar Profesor a Asignatura</button>
                     <button onClick={() => setActiveForm('topic')}>Añadir Topic</button>
                     <button onClick={() => setActiveForm('enroll')}>Asignar Estudiante a Asignatura</button>
+                    <button onClick={() => setActiveForm('examStats')}>Ver Estadísticas de Exámenes</button>
                 </div>
                 <div className="form-container">
                     {notification && <Notification message={notification.message} type={notification.type} />}
+                    {activeForm === 'examStats' && (
+                        <div className="stats-container">
+                            <h2>Estadísticas de Exámenes</h2>
+                            <div>
+                                <label className="custom-label">Selecciona un Profesor:</label>
+                                <select
+                                    value={selectedProfessorId}
+                                    onChange={(e) => setSelectedProfessorId(e.target.value)}
+                                    className="custom-select"
+                                >
+                                    <option value="">Selecciona un profesor</option>
+                                    {professors.map((professor: { id: number, name: string }) => (
+                                        <option key={professor.id} value={professor.id}>
+                                            {professor.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <button
+                                    onClick={handleFetchValidatedExams}
+                                    className="stats-button"
+                                >
+                                    Ver Exámenes Validados
+                                </button>
+                            </div>
+
+                            {showValidatedExams && validatedExams.length > 0 && (
+                                <div className="validated-exams">
+                                    <h3>Exámenes Validados</h3>
+                                    <table className="stats-table">
+                                        <thead>
+                                            <tr>
+                                                <th>ID Examen</th>
+                                                <th>Asignatura</th>
+                                                <th>Fecha de Validación</th>
+                                                <th>Observaciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {validatedExams.map((exam) => (
+                                                <tr key={exam.examId}>
+                                                    <td>{exam.examId}</td>
+                                                    <td>{exam.assignmentName}</td>
+                                                    <td>{new Date(exam.validationDate).toLocaleDateString()}</td>
+                                                    <td>{exam.observations || 'Sin observaciones'}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                            <div>
+                                <label className="custom-label">Selecciona una Asignatura:</label>
+                                <select
+                                    name="assignmentId"
+                                    value={enrollData.assignmentId}
+                                    onChange={handleEnrollChange}
+                                    required
+                                    className="custom-select"
+                                >
+                                    <option value="">Selecciona una asignatura</option>
+                                    {assignments.map((assignment: { id: number, name: string }) => (
+                                        <option key={assignment.id} value={assignment.id}>
+                                            {assignment.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="button-group">
+                                    <button
+                                        onClick={() => {
+                                            handleFetchExamStats();
+                                            setActiveTab('examStats');
+                                        }}
+                                        className={`tab-button ${activeTab === 'examStats' ? 'active' : ''}`}
+                                    >
+                                        Ver Estadísticas de Exámenes
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            handleFetchMostUsedQuestions();
+                                            setActiveTab('mostUsed');
+                                        }}
+                                        className={`tab-button ${activeTab === 'mostUsed' ? 'active' : ''}`}
+                                    >
+                                        Ver Preguntas Más Usadas
+                                    </button>
+                                </div>
+                            </div>
+
+                            {activeTab === 'examStats' && examStats.length > 0 && (
+                                <table className="stats-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID Examen</th>
+                                            <th>Profesor</th>
+                                            <th>Fecha de Creación</th>
+                                            <th>Total Preguntas</th>
+                                            <th>Dificultad</th>
+                                            <th>Límite de Temas</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {examStats.map((stat) => (
+                                            <tr key={stat.examId}>
+                                                <td>{stat.examId}</td>
+                                                <td>{stat.professorName}</td>
+                                                <td>{new Date(stat.creationDate).toLocaleDateString()}</td>
+                                                <td>{stat.totalQuestions}</td>
+                                                <td>{stat.difficulty}</td>
+                                                <td>{stat.topicLimit}</td>
+                                                <td>{stat.state || 'Sin validar'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+
+                            {activeTab === 'mostUsed' && mostUsedQuestions.length > 0 && (
+                                <div className="most-used-questions">
+                                    <h3>Preguntas Más Usadas</h3>
+                                    <table className="stats-table">
+                                        <thead>
+                                            <tr>
+                                                <th>ID Pregunta</th>
+                                                <th>Texto</th>
+                                                <th>Dificultad</th>
+                                                <th>Tema</th>
+                                                <th>Veces Usada</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {mostUsedQuestions.map((question) => (
+                                                <tr key={question.questionId}>
+                                                    <td>{question.questionId}</td>
+                                                    <td>{question.questionText}</td>
+                                                    <td>{question.difficulty}</td>
+                                                    <td>{question.topicName}</td>
+                                                    <td>{question.usageCount}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    )}
                     {activeForm === 'enroll' && (
                         <form onSubmit={handleEnrollSubmit} className="admin-form">
                             <h2>Asignar Estudiante a Asignatura</h2>
