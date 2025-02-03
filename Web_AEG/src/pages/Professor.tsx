@@ -218,37 +218,23 @@ const ProfessorPage = () => {
         }
     };
 
-    useEffect(() => {
-        try {
-            if (token) {
-                const decoded: any = jwtDecode(token);
-                if (decoded.professorId) {
-                    setProfessorId(decoded.professorId);
-                    // Convierte explícitamente el valor a booleano
-                    setIsHeadOfAssignment(!!decoded.IsHeadOfAssignment);
-                } else {
-                    console.error('El token no contiene professorId.');
-                    alert('No se pudo obtener la información del profesor. Por favor, inicia sesión nuevamente.');
-                }
-            } else {
-                console.error('No se encontró ningún token en localStorage.');
-            }
-        } catch (error) {
-            console.error('Error al decodificar el token:', error);
-            alert('Hubo un error al procesar tu sesión. Por favor, inicia sesión nuevamente.');
-        }
-    }, []);
-
     // Decodificar el token y obtener el professorId y isHeadOfAssignment
     useEffect(() => {
         try {
-            const token = localStorage.getItem('token'); // Cambia si usas otro almacenamiento
+            const token = localStorage.getItem('token');
             if (token) {
-                const decoded: any = jwtDecode(token); // Decodifica el token
+                const decoded: any = jwtDecode(token);
+                console.log('Valor de IsHeadOfAssignment:', decoded.IsHeadOfAssignment);
+                console.log('Tipo de IsHeadOfAssignment:', typeof decoded.IsHeadOfAssignment);
                 console.log('Token decodificado:', decoded);
                 if (decoded.professorId) {
-                    setProfessorId(decoded.professorId); // Extrae el professorId
-                    setIsHeadOfAssignment(decoded.IsHeadOfAssignment); // Extrae isHeadOfAssignment
+                    setProfessorId(decoded.professorId);
+                    // Asignar isHeadOfAssignment dependiendo del tipo de dato
+                    if (typeof decoded.IsHeadOfAssignment === 'string') {
+                        setIsHeadOfAssignment(decoded.IsHeadOfAssignment.toLowerCase() === "true");
+                    } else {
+                        setIsHeadOfAssignment(decoded.IsHeadOfAssignment);
+                    }
                     console.log('IsHeadOfAssignment:', decoded.IsHeadOfAssignment);
                 } else {
                     console.error('El token no contiene professorId.');
@@ -263,6 +249,8 @@ const ProfessorPage = () => {
             alert('Hubo un error al procesar tu sesión. Por favor, inicia sesión nuevamente.');
         }
     }, []);
+
+
     // Carga los temas disponibles para el profesor logueado
     useEffect(() => {
         if (professorId) {
