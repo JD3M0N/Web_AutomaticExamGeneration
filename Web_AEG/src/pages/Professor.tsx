@@ -78,6 +78,23 @@ const ProfessorPage = () => {
         }
     };
 
+    // En el useEffect donde cargas las asignaturas
+    useEffect(() => {
+        if (professorId) {
+            fetchAssignmentsByProfessor(
+                professorId,
+                setAssignments,
+                setNotification
+            ).catch(error => {
+                console.error('Error al cargar asignaturas:', error);
+                setNotification({
+                    message: 'Error al cargar las asignaturas',
+                    type: 'error'
+                });
+            });
+        }
+    }, [professorId]);
+    
     const fetchUnvalidatedExams = async () => {
         try {
             const response = await fetch(`http://localhost:5024/api/Professor/${professorId}/unvalidated-exams`, {
@@ -238,7 +255,7 @@ const ProfessorPage = () => {
     useEffect(() => {
         if (professorId) {
             fetchProfessorTopics(professorId, setTopics, setNotification);
-            
+
         }
     }, [professorId]);
 
