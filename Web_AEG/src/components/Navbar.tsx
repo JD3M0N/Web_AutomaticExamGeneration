@@ -46,6 +46,11 @@ const Navbar = () => {
                         </a>
                     </li>
                     <li>
+                        <a onClick={() => navigate('/statistics')} className={location.pathname === '/statistics' ? 'active' : ''}>
+                            Estadísticas
+                        </a>
+                    </li>
+                    <li>
                         <a href="#contact" className={location.pathname === '/contact' ? 'active' : ''}>
                             Contacto
                         </a>

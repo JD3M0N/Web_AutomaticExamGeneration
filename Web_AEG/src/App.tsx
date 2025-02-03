@@ -5,7 +5,8 @@ import LogIn from './pages/LogIn';
 import Admin from './pages/Admin';
 import Professor from './pages/Professor';
 import Student from './pages/Student';
-import Features from './pages/Features'; 
+import Features from './pages/Features';
+import Statistics from './pages/Statistics';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -20,7 +21,9 @@ function App() {
           <Route path="/login" element={<LogIn />} />
 
           {/* Página de funcionalidades */}
-          <Route path="/features" element={<Features />} /> {/* Nueva ruta */}
+          <Route path="/features" element={<Features />} />
+
+          <Route path="/statistics" element={<Statistics />} /> 
 
           {/* Rutas protegidas */}
           <Route

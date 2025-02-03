@@ -1,0 +1,21 @@
+.statistics-page {
+    padding: 2rem;
+    text-align: center;
+}
+
+.statistics-table {
+    margin-top: 1rem;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.statistics-table th,
+.statistics-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.statistics-table th {
+    background-color: #A51C30;
+    color: white;
+}
