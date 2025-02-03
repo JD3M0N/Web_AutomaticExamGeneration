@@ -462,7 +462,35 @@ const ProfessorPage = () => {
             );
             if (response.ok) {
                 const data = await response.json();
-                setReviewableExams(data.$values || []);
+                const exams: any[] = data.$values || [];
+                // Para cada examen, se consulta el endpoint para obtener el nombre de la asignatura
+                const updatedExams = await Promise.all(
+                    exams.map(async (exam) => {
+                        if (exam.assignmentId && !exam.assignmentName) {
+                            try {
+                                const assignResponse = await fetch(
+                                    `http://localhost:5024/api/Assignment/${exam.assignmentId}`,
+                                    {
+                                        method: 'GET',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                        },
+                                    }
+                                );
+                                if (assignResponse.ok) {
+                                    const assignData = await assignResponse.json();
+                                    // Ajusta el nombre del campo según la respuesta de la API.
+                                    exam.assignmentName = assignData.name || assignData.assignmentName;
+                                }
+                            } catch (error) {
+                                console.error('Error fetching assignment:', error);
+                            }
+                        }
+                        return exam;
+                    })
+                );
+                setReviewableExams(updatedExams);
             } else {
                 console.error('Error al obtener los exámenes para calificar');
             }
