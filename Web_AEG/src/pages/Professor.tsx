@@ -8,6 +8,7 @@ import { fetchQuestions } from '../utils/crudQuestion';
 import { fetchExams } from '../utils/crudExam';
 import { fetchAssignmentsByProfessor } from '../utils/crudAssignment';
 import '../css/professor.css';
+import { updateQuestion } from '../utils/crudQuestion';
 
 const ProfessorPage = () => {
     const token = localStorage.getItem('token');
@@ -534,6 +535,108 @@ const ProfessorPage = () => {
         }
     };
 
+    const [myQuestions, setMyQuestions] = useState<any[]>([]);
+    const [selectedQuestionForUpdate, setSelectedQuestionForUpdate] = useState<any>(null);
+    const [showUpdateQuestionModal, setShowUpdateQuestionModal] = useState(false);
+
+    // Función para obtener las preguntas creadas por el profesor logueado
+    // Función para obtener las preguntas creadas por el profesor logueado
+    const handleFetchMyQuestions = async () => {
+        try {
+            const response = await fetch(
+                `http://localhost:5024/api/Question/professor/${professorId}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    },
+                }
+            );
+            if (response.ok) {
+                const data = await response.json();
+                const questions: any[] = data.$values || [];
+                // Enriquecer cada pregunta con el nombre del tema
+                const enrichedQuestions = await Promise.all(
+                    questions.map(async (question) => {
+                        if (question.topicId) {
+                            try {
+                                const topicResponse = await fetch(
+                                    `http://localhost:5024/api/Topic/${question.topicId}`,
+                                    {
+                                        method: 'GET',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                    }
+                                );
+                                if (topicResponse.ok) {
+                                    const topicData = await topicResponse.json();
+                                    question.topic = topicData;
+                                }
+                            } catch (error) {
+                                console.error('Error fetching topic:', error);
+                            }
+                        }
+                        return question;
+                    })
+                );
+                setMyQuestions(enrichedQuestions);
+            } else {
+                console.error('Error al obtener las preguntas del profesor');
+            }
+        } catch (error) {
+            console.error('Error fetching my questions:', error);
+        }
+    };
+
+    // Efecto para cargar las preguntas cuando se activa el formulario 'myQuestions'
+    useEffect(() => {
+        if (activeForm === 'myQuestions') {
+            handleFetchMyQuestions();
+        }
+    }, [activeForm]);
+
+    // Función para abrir el modal de actualización de preguntas
+    const openUpdateQuestionModal = (question: any) => {
+        setSelectedQuestionForUpdate(question);
+        setShowUpdateQuestionModal(true);
+    };
+
+    // Función para manejar los cambios en los inputs del formulario de actualización
+    const handleUpdateQuestionInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setSelectedQuestionForUpdate({ ...selectedQuestionForUpdate, [name]: value });
+    };
+
+
+    const handleUpdateQuestionSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!professorId) {
+            console.error("Error: El professorId es nulo o no está definido.");
+            alert("No se pudo identificar al profesor. Intenta iniciar sesión nuevamente.");
+            return;
+        }
+        console.log("Actualizando pregunta:", selectedQuestionForUpdate);
+    
+        // Clonar la pregunta y eliminar propiedades innecesarias
+        const questionToUpdate = { ...selectedQuestionForUpdate };
+        delete questionToUpdate.professor;
+        delete questionToUpdate.exams;
+        delete questionToUpdate.belongs;
+        delete questionToUpdate.enters;
+    
+        await updateQuestion(
+            selectedQuestionForUpdate.id,
+            questionToUpdate,
+            handleFetchMyQuestions,
+            setNotification
+        );
+    };
+
+
+
+
     return (
         <div className="professor-page">
             <ProfessorNavbar />
@@ -541,6 +644,7 @@ const ProfessorPage = () => {
                 <div className="sidebar">
                     <button onClick={() => setActiveForm('addQuestion')}>Añadir Pregunta</button>
                     <button onClick={() => setActiveForm('viewQuestions')}>Ver Preguntas</button>
+                    <button onClick={() => setActiveForm('myQuestions')}>Mis Preguntas</button>
                     <button onClick={() => setActiveForm('selectAssignment')}>Crear Examen</button>
                     <button onClick={() => setActiveForm('selectAssignmentForExams')}>Ver Exámenes</button>
                     <button onClick={() => setActiveForm('gradeExams')}>Calificar Exámenes</button>
@@ -553,6 +657,120 @@ const ProfessorPage = () => {
                 </div>
                 <div className="form-container">
                     {notification && <Notification message={notification.message} type={notification.type} />}
+                    {activeForm === 'myQuestions' && (
+                        <div className="list-container">
+                            <h2>Mis Preguntas</h2>
+                            {myQuestions.length > 0 ? (
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Texto de la Pregunta</th>
+                                            <th>Dificultad</th>
+                                            <th>Tipo</th>
+                                            <th>Tema</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {myQuestions.map((question: any) => (
+                                            <tr key={question.id}>
+                                                <td>{question.id}</td>
+                                                <td>{question.questionText}</td>
+                                                <td>{question.difficulty}</td>
+                                                <td>{question.type}</td>
+                                                <td>{question.topic?.name || 'Desconocido'}</td>
+                                                <td>
+                                                    <button onClick={() => openUpdateQuestionModal(question)}>
+                                                        Modificar
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <p>No has creado ninguna pregunta.</p>
+                            )}
+                        </div>
+                    )}
+
+                    {showUpdateQuestionModal && selectedQuestionForUpdate && (
+                        <div
+                            className="modal"
+                            style={{
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                background: 'rgba(0,0,0,0.5)',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                zIndex: 1000,
+                            }}
+                        >
+                            <div
+                                className="modal-content"
+                                style={{
+                                    background: '#fff',
+                                    padding: '2rem',
+                                    borderRadius: '8px',
+                                    maxWidth: '600px',
+                                    width: '90%',
+                                }}
+                            >
+                                <h2>Modificar Pregunta {selectedQuestionForUpdate.id}</h2>
+                                <form onSubmit={handleUpdateQuestionSubmit}>
+                                    <div>
+                                        <label>Texto de la Pregunta:</label>
+                                        <textarea
+                                            name="questionText"
+                                            value={selectedQuestionForUpdate.questionText}
+                                            onChange={handleUpdateQuestionInputChange}
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label>Dificultad:</label>
+                                        <input
+                                            type="number"
+                                            name="difficulty"
+                                            value={selectedQuestionForUpdate.difficulty}
+                                            onChange={handleUpdateQuestionInputChange}
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label>Tipo:</label>
+                                        <select
+                                            name="type"
+                                            value={selectedQuestionForUpdate.type}
+                                            onChange={handleUpdateQuestionInputChange}
+                                            required
+                                        >
+                                            <option value="">Selecciona un tipo</option>
+                                            <option value="MultipleChoice">Opción Múltiple</option>
+                                            <option value="TrueFalse">Verdadero/Falso</option>
+                                            <option value="Essay">Ensayo</option>
+                                        </select>
+                                    </div>
+                                    {/* Agrega más campos si fuese necesario, p.ej. el tema */}
+                                    <button type="submit">Guardar Cambios</button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowUpdateQuestionModal(false);
+                                            setSelectedQuestionForUpdate(null);
+                                        }}
+                                    >
+                                        Cancelar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    )}
                     {activeForm === 'gradeExams' && (
                         <div className="list-container">
                             <h2>Exámenes para calificar</h2>
