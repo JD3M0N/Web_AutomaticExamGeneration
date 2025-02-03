@@ -57,6 +57,11 @@ const Statistics = () => {
         navigate(`/professor-reviews`);
     };
 
+    // Redirigir a la página de preguntas no utilizadas
+    const goToUnusedQuestionsPage = () => {
+        navigate(`/unused-questions`);
+    };
+
     return (
         <div>
             <Navbar />
@@ -81,7 +86,7 @@ const Statistics = () => {
                     <button>Preguntas Más Usadas</button>
                     <button>Exámenes Validados</button>
                     <button>Desempeño en Exámenes</button>
-                    <button>Preguntas No Utilizadas</button>
+                    <button onClick={goToUnusedQuestionsPage}>Preguntas No Utilizadas</button>
                     <button onClick={goToCompareExamsPage}>Comparación de Exámenes</button>
                     <button onClick={goToProfessorReviewsPage}>Revisores de Exámenes</button>
                 </div>
