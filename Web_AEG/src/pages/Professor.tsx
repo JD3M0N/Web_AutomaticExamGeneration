@@ -188,13 +188,23 @@ const ProfessorPage = () => {
         }
 
         try {
-            const response = await fetch(`http://localhost:5024/api/ExamValidation/${examId}?isValid=${isValid}`, {
-                method: 'PUT',
+            const validationData = {
+                examId: examId,
+                professorId: professorId, // Asegúrate de que este valor ya esté definido en el componente
+                observations: "",
+                validationDate: new Date().toISOString(),
+                validationState: isValid
+            };
+
+            const response = await fetch(`http://localhost:5024/api/Validate`, {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                 },
+                body: JSON.stringify(validationData)
             });
+
             if (response.ok) {
                 setUnvalidatedExams(prev => prev.filter(exam => exam.id !== examId));
                 setNotification({ message: "Examen validado correctamente", type: "success" });
@@ -380,12 +390,6 @@ const ProfessorPage = () => {
             console.error('Error al crear el examen:', error);
             alert('Hubo un error al intentar crear el examen.');
         }
-    };
-
-    // Función para obtener el nombre del tema a partir del ID
-    const getTopicName = (topicId: number) => {
-        const topic = topics.find((t: { id: number }) => t.id === topicId);
-        return topic ? topic.name : 'Desconocido';
     };
 
     // Manejo de la selección de una asignatura
