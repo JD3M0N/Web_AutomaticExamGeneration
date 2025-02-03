@@ -10,6 +10,7 @@ import { fetchAssignmentsByProfessor } from '../utils/crudAssignment';
 import '../css/professor.css';
 
 const ProfessorPage = () => {
+    const token = localStorage.getItem('token');
     const [activeForm, setActiveForm] = useState('');
     const [professorId, setProfessorId] = useState<number | null>(null);
     const [isHeadOfAssignment, setIsHeadOfAssignment] = useState(false);
@@ -218,22 +219,23 @@ const ProfessorPage = () => {
     };
 
     useEffect(() => {
-        // Verifica y decodifica el token
         try {
-            const token = localStorage.getItem('token');
             if (token) {
                 const decoded: any = jwtDecode(token);
                 if (decoded.professorId) {
                     setProfessorId(decoded.professorId);
-                    setIsHeadOfAssignment(decoded.IsHeadOfAssignment);
-                    console.log("ahora viene si es jefe de asignatura");
-                    console.log(isHeadOfAssignment);
+                    // Convierte explícitamente el valor a booleano
+                    setIsHeadOfAssignment(!!decoded.IsHeadOfAssignment);
                 } else {
-                    alert('No se pudo obtener la información del profesor. Inicia sesión nuevamente.');
+                    console.error('El token no contiene professorId.');
+                    alert('No se pudo obtener la información del profesor. Por favor, inicia sesión nuevamente.');
                 }
+            } else {
+                console.error('No se encontró ningún token en localStorage.');
             }
-        } catch {
-            alert('Hubo un error al procesar tu sesión. Inicia sesión nuevamente.');
+        } catch (error) {
+            console.error('Error al decodificar el token:', error);
+            alert('Hubo un error al procesar tu sesión. Por favor, inicia sesión nuevamente.');
         }
     }, []);
 
@@ -417,6 +419,39 @@ const ProfessorPage = () => {
         setShowQuestionModal(false);
         setSelectedQuestion(null);
     };
+    //------------------Modal para visualizar examens
+    // Agrega nuevos estados para las preguntas del examen y el modal, por ejemplo:
+    const [examQuestions, setExamQuestions] = useState<any[]>([]);
+    const [showExamModal, setShowExamModal] = useState(false);
+
+    // Función para abrir el modal y obtener las preguntas del examen desde el endpoint
+    const openExamModal = async (examId: number) => {
+        try {
+            const response = await fetch(`http://localhost:5024/api/Belong/exam/${examId}/questions`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const questions = data.$values || [];
+                setExamQuestions(questions);
+                setShowExamModal(true);
+            } else {
+                throw new Error('Error al obtener las preguntas del examen.');
+            }
+        } catch (error) {
+            console.error('Error fetching exam questions:', error);
+        }
+    };
+
+    // Función para cerrar el modal
+    const closeExamModal = () => {
+        setShowExamModal(false);
+        setExamQuestions([]);
+    };
 
     return (
         <div className="professor-page">
@@ -427,9 +462,12 @@ const ProfessorPage = () => {
                     <button onClick={() => setActiveForm('viewQuestions')}>Ver Preguntas</button>
                     <button onClick={() => setActiveForm('selectAssignment')}>Crear Examen</button>
                     <button onClick={() => setActiveForm('selectAssignmentForExams')}>Ver Exámenes</button>
-                    {isHeadOfAssignment && (
-                        <button onClick={handleValidateExamsClick}>Validar Examen</button>
-                    )}
+                    {(() => {
+                        if (isHeadOfAssignment) {
+                            return <button onClick={handleValidateExamsClick}>Validar Examen</button>;
+                        }
+                        return null;
+                    })()}
                 </div>
                 <div className="form-container">
                     {notification && <Notification message={notification.message} type={notification.type} />}
@@ -619,6 +657,7 @@ const ProfessorPage = () => {
                                             <th>Dificultad</th>
                                             <th>Cantidad de temas</th>
                                             <th>Estado</th>
+                                            <th>Ver</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -629,7 +668,8 @@ const ProfessorPage = () => {
                                             totalQuestions: number,
                                             difficulty: number,
                                             topicLimit: number,
-                                            state?: string
+                                            state?: string,
+                                            professor?: { email: string }
                                         }) => (
                                             <tr key={exam.id}>
                                                 <td>{exam.professor?.email || 'Desconocido'}</td>
@@ -638,6 +678,19 @@ const ProfessorPage = () => {
                                                 <td>{exam.difficulty}</td>
                                                 <td>{exam.topicLimit}</td>
                                                 <td>{exam.state || 'Sin definir'}</td>
+                                                <td>
+                                                    <button
+                                                        style={{
+                                                            backgroundColor: '#ADD8E6',
+                                                            border: 'none',
+                                                            padding: '0.5rem',
+                                                            borderRadius: '4px'
+                                                        }}
+                                                        onClick={() => openExamModal(exam.id)}
+                                                    >
+                                                        <i className="fa fa-book" aria-hidden="true"></i>
+                                                    </button>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -645,6 +698,45 @@ const ProfessorPage = () => {
                             ) : (
                                 <p>No hay exámenes disponibles.</p>
                             )}
+                        </div>
+                    )}
+
+                    {showExamModal && examQuestions.length > 0 && (
+                        <div
+                            className="modal"
+                            style={{
+                                position: 'fixed',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                height: '100%',
+                                background: 'rgba(0,0,0,0.5)',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                zIndex: 1000
+                            }}
+                        >
+                            <div
+                                className="modal-content"
+                                style={{
+                                    background: '#fff',
+                                    padding: '2rem',
+                                    borderRadius: '8px',
+                                    maxWidth: '600px',
+                                    width: '90%'
+                                }}
+                            >
+                                <h2>Preguntas del Examen</h2>
+                                <ul>
+                                    {examQuestions.map((question: any) => (
+                                        <li key={question.id}>
+                                            <strong>{question.type}:</strong> {question.questionText} - Dificultad: {question.difficulty}
+                                        </li>
+                                    ))}
+                                </ul>
+                                <button onClick={closeExamModal}>Cerrar</button>
+                            </div>
                         </div>
                     )}
                     {activeForm === 'selectAssignmentForExams' && (
