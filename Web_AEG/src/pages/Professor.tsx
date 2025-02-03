@@ -441,6 +441,71 @@ const ProfessorPage = () => {
         setExamQuestions([]);
     };
 
+    // Agrega nuevos estados al inicio del componente
+    const [reviewableExams, setReviewableExams] = useState<any[]>([]);
+    const [selectedExamToGrade, setSelectedExamToGrade] = useState<number | null>(null);
+    const [examResponses, setExamResponses] = useState<any[]>([]);
+    const [showGradeModal, setShowGradeModal] = useState(false);
+
+    // Función para obtener los exámenes revisables
+    const handleFetchReviewableExams = async () => {
+        try {
+            const response = await fetch(
+                `http://localhost:5024/api/Professor/${professorId}/reviewable-exams`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    },
+                }
+            );
+            if (response.ok) {
+                const data = await response.json();
+                setReviewableExams(data.$values || []);
+            } else {
+                console.error('Error al obtener los exámenes para calificar');
+            }
+        } catch (error) {
+            console.error('Error fetching reviewable exams:', error);
+        }
+    };
+
+    // Usa un efecto para cargar los exámenes cuando se active el formulario 'gradeExams'
+    useEffect(() => {
+        if (activeForm === 'gradeExams') {
+            handleFetchReviewableExams();
+        }
+    }, [activeForm]);
+
+    // Función para abrir el modal de calificación de examenes
+    const handleOpenGradeModal = async (examId: number) => {
+        try {
+            // Suponiendo que existe un endpoint para obtener las respuestas del examen,
+            // ajusta la URL según corresponda.
+            const response = await fetch(
+                `http://localhost:5024/api/Exam/${examId}/responses`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    },
+                }
+            );
+            if (response.ok) {
+                const data = await response.json();
+                setExamResponses(data.$values || []);
+                setSelectedExamToGrade(examId);
+                setShowGradeModal(true);
+            } else {
+                console.error('Error al obtener las respuestas del examen');
+            }
+        } catch (error) {
+            console.error('Error fetching exam responses:', error);
+        }
+    };
+
     return (
         <div className="professor-page">
             <ProfessorNavbar />
@@ -450,6 +515,7 @@ const ProfessorPage = () => {
                     <button onClick={() => setActiveForm('viewQuestions')}>Ver Preguntas</button>
                     <button onClick={() => setActiveForm('selectAssignment')}>Crear Examen</button>
                     <button onClick={() => setActiveForm('selectAssignmentForExams')}>Ver Exámenes</button>
+                    <button onClick={() => setActiveForm('gradeExams')}>Calificar Exámenes</button>
                     {(() => {
                         if (isHeadOfAssignment) {
                             return <button onClick={handleValidateExamsClick}>Validar Examen</button>;
@@ -459,7 +525,78 @@ const ProfessorPage = () => {
                 </div>
                 <div className="form-container">
                     {notification && <Notification message={notification.message} type={notification.type} />}
+                    {activeForm === 'gradeExams' && (
+                        <div className="list-container">
+                            <h2>Exámenes para calificar</h2>
+                            {reviewableExams.length > 0 ? (
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>ID Examen</th>
+                                            <th>Asignatura</th>
+                                            <th>Fecha</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {reviewableExams.map((exam: any) => (
+                                            <tr key={exam.id}>
+                                                <td>{exam.id}</td>
+                                                <td>{exam.assignmentName || exam.assignment?.name}</td>
+                                                <td>{new Date(exam.date).toLocaleDateString()}</td>
+                                                <td>
+                                                    <button onClick={() => handleOpenGradeModal(exam.id)}>
+                                                        Calificar
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <p>No hay exámenes para calificar.</p>
+                            )}
+                        </div>
+                    )}
 
+                    {showGradeModal && (
+                        <div className="modal" style={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            background: 'rgba(0,0,0,0.5)',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            zIndex: 1000
+                        }}>
+                            <div className="modal-content" style={{
+                                background: '#fff',
+                                padding: '2rem',
+                                borderRadius: '8px',
+                                maxWidth: '600px',
+                                width: '90%'
+                            }}>
+                                <h2>Respuestas del Examen {selectedExamToGrade}</h2>
+                                <ul>
+                                    {examResponses.map((resp: any) => (
+                                        <li key={resp.questionId}>
+                                            <strong>{resp.questionText}</strong>: {resp.answer}
+                                        </li>
+                                    ))}
+                                </ul>
+                                <button onClick={() => {
+                                    setShowGradeModal(false);
+                                    setExamResponses([]);
+                                    setSelectedExamToGrade(null);
+                                }}>
+                                    Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    )}
                     {activeForm === 'validateExams' && unvalidatedExams.length > 0 && (
                         <div className="list-container">
                             <table>

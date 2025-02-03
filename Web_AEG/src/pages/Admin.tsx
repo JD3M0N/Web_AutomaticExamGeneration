@@ -350,6 +350,26 @@ const AdminPage = () => {
         }
     };
 
+    const [compareExams, setCompareExams] = useState<any[]>([]);
+    const [showCompareExams, setShowCompareExams] = useState(false);
+
+    const handleFetchCompareExams = async () => {
+        try {
+            const response = await fetch('http://localhost:5024/api/Stats/compare-exams');
+            if (response.ok) {
+                const data = await response.json();
+                const exams = data.$values || [];
+                setCompareExams(exams);
+                setShowCompareExams(true);
+            } else {
+                setNotification({ message: 'Error al obtener la comparación de exámenes', type: 'error' });
+            }
+        } catch (error) {
+            console.error('Error en la petición:', error);
+            setNotification({ message: 'Error al conectar con el servidor', type: 'error' });
+        }
+    };
+
     const [activeTab, setActiveTab] = useState<'examStats' | 'mostUsed' | 'unused'>('examStats');
     return (
         <div className="admin-page">
@@ -364,6 +384,7 @@ const AdminPage = () => {
                     <button onClick={() => setActiveForm('topic')}>Añadir Topic</button>
                     <button onClick={() => setActiveForm('enroll')}>Asignar Estudiante a Asignatura</button>
                     <button onClick={() => setActiveForm('examStats')}>Ver Estadísticas de Exámenes</button>
+                    <button onClick={() => setActiveForm('compareExams')}>Comparar Exámenes</button>
                 </div>
                 <div className="form-container">
                     {notification && <Notification message={notification.message} type={notification.type} />}
@@ -598,6 +619,44 @@ const AdminPage = () => {
                                         </tbody>
                                     </table>
                                 </div>
+                            )}
+                        </div>
+                    )}
+                    {activeForm === 'compareExams' && (
+                        <div className="stats-container">
+                            <h2>Comparación de Exámenes por Asignatura</h2>
+                            <button
+                                onClick={handleFetchCompareExams}
+                                className="stats-button"
+                            >
+                                Obtener Comparación
+                            </button>
+
+                            {showCompareExams && compareExams.length > 0 && (
+                                <table className="stats-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Asignatura</th>
+                                            <th>Total Exámenes</th>
+                                            <th>Promedio Preguntas</th>
+                                            <th>Distribución Dificultad</th>
+                                            <th>Distribución Temas</th>
+                                            <th>Tasa Cumplimiento (%)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {compareExams.map((comparison, index) => (
+                                            <tr key={index}>
+                                                <td>{comparison.assignmentName}</td>
+                                                <td>{comparison.totalExams}</td>
+                                                <td>{comparison.averageQuestions.toFixed(2)}</td>
+                                                <td>{comparison.difficultyDistribution}</td>
+                                                <td>{comparison.topicDistribution}</td>
+                                                <td>{(comparison.complianceRate * 100).toFixed(2)}%</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             )}
                         </div>
                     )}
