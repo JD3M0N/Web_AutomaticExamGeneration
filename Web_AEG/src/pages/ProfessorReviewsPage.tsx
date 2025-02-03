@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 import '../css/professorReviews.css';
 
 const ProfessorReviewsPage = () => {
@@ -19,11 +21,41 @@ const ProfessorReviewsPage = () => {
             });
     }, []);
 
+    // Función para generar y descargar el PDF
+    const downloadPDF = () => {
+        const doc = new jsPDF();
+        doc.text("Revisores de Exámenes", 14, 10);
+
+        const tableColumn = ["Profesor", "Asignatura", "Exámenes Revisados"];
+        const tableRows = [];
+
+        professorReviews.forEach((review: any) => {
+            const rowData = [
+                review.professorName,
+                review.assignmentName,
+                review.examsReviewed
+            ];
+            tableRows.push(rowData);
+        });
+
+        (doc as any).autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: 20,
+        });
+
+        doc.save("revisores_examenes.pdf");
+    };
+
     return (
         <div>
             <Navbar />
             <div className="professor-reviews-page">
                 <h1>Revisores de Exámenes</h1>
+
+                <button className="download-pdf-button" onClick={downloadPDF}>
+                    Descargar PDF
+                </button>
 
                 {loading ? (
                     <p>Cargando datos...</p>
