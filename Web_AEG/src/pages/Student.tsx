@@ -11,6 +11,10 @@ const StudentPage = () => {
     const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
     const [studentId, setStudentId] = useState<number | null>(null);
     const [selectedAssignment, setSelectedAssignment] = useState<number | null>(null);
+    const [selectedExam, setSelectedExam] = useState<number | null>(null);
+    const [questions, setQuestions] = useState<any[]>([]);
+    const [answers, setAnswers] = useState<{ [key: number]: string }>({});
+
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -53,6 +57,87 @@ const StudentPage = () => {
         }
     }, [activeForm, studentId]);
 
+
+    const handleTakeExam = async (examId: number) => {
+        try {
+            const response = await fetch(`http://localhost:5024/api/Belong/exam/${examId}/questions`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+    
+            if (response.ok) {
+                const data = await response.json();
+                setQuestions(data.$values || []);
+                setSelectedExam(examId);
+                setActiveForm('takeExam'); // Activamos la vista de examen
+            } else {
+                console.error('Error al obtener preguntas del examen:', await response.json());
+            }
+        } catch (error) {
+            console.error('Error al conectar con el servidor:', error);
+        }
+    };
+
+
+
+    const handleAnswerChange = (questionId: number, value: string) => {
+        setAnswers(prev => ({
+            ...prev,
+            [questionId]: value,
+        }));
+    };    
+    
+
+
+    const handleSubmitExam = async (e: React.FormEvent) => {
+        e.preventDefault();
+    
+        if (!selectedExam || !studentId) {
+            alert("No se puede enviar el examen. Datos faltantes.");
+            return;
+        }
+    
+        try {
+            // Enviar cada respuesta de manera individual
+            const promises = Object.entries(answers).map(async ([questionId, response]) => {
+                const payload = {
+                    studentId: studentId,
+                    examId: selectedExam,
+                    questionId: Number(questionId),
+                    answer: response,
+                };
+    
+                console.log("Enviando respuesta:", payload); // Debug
+    
+                const responseFetch = await fetch("http://localhost:5024/api/Response", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${localStorage.getItem('token')}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                });
+    
+                if (!responseFetch.ok) {
+                    console.error(`Error al enviar la respuesta de la pregunta ${questionId}:`, await responseFetch.json());
+                }
+            });
+    
+            await Promise.all(promises); // Esperar que todas las respuestas sean enviadas
+    
+            alert("Examen enviado con éxito.");
+            setActiveForm("accessExams"); // Regresar a la lista de exámenes
+        } catch (error) {
+            console.error("Error al conectar con el servidor:", error);
+        }
+    }; 
+    
+
+
+
     return (
         <div className="student-page">
             <StudentNavbar />
@@ -63,6 +148,66 @@ const StudentPage = () => {
                     <button onClick={() => setActiveForm('requestRegrade')}>Solicitar Recalificación</button>
                 </div>
                 <div className="form-container">
+                    {activeForm === 'takeExam' && selectedExam && (
+                        <div className="exam-container">
+                            <h2>Realizando Examen</h2>
+                            <form onSubmit={handleSubmitExam}>
+                                {questions.map((question, index) => (
+                                    <div key={index} className="question-block">
+                                        <p>{question.questionText}</p>
+                                        
+                                        {question.type === 'MultipleChoice' && (
+                                            <div>
+                                                {question.options.map((option: string, i: number) => (
+                                                    <label key={i}>
+                                                        <input
+                                                            type="radio"
+                                                            name={`question-${index}`}
+                                                            value={option}
+                                                            onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                                                        />
+                                                        {option}
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {question.type === 'Essay' && (
+                                            <textarea
+                                                name={`question-${index}`}
+                                                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                                            />
+                                        )}
+
+                                        {question.type === 'TrueFalse' && (
+                                            <div>
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name={`question-${index}`}
+                                                        value="true"
+                                                        onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                                                    />
+                                                    Verdadero
+                                                </label>
+                                                <label>
+                                                    <input
+                                                        type="radio"
+                                                        name={`question-${index}`}
+                                                        value="false"
+                                                        onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                                                    />
+                                                    Falso
+                                                </label>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+
+                                <button type="submit">Enviar Examen</button>
+                            </form>
+                        </div>
+                    )}
                     {notification && <p className={`notification ${notification.type}`}>{notification.message}</p>}
 
                     {activeForm === 'accessExams' && (
@@ -92,6 +237,7 @@ const StudentPage = () => {
                                         <tr>
                                             <th>Fecha</th>
                                             <th>Total de Preguntas</th>
+                                            <th>Acción</th> {/* Nueva columna para el botón */}
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -99,6 +245,9 @@ const StudentPage = () => {
                                             <tr key={exam.id}>
                                                 <td>{exam.date}</td>
                                                 <td>{exam.totalQuestions}</td>
+                                                <td>
+                                                    <button onClick={() => handleTakeExam(exam.id)}>Realizar Examen</button>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -109,9 +258,14 @@ const StudentPage = () => {
                         </div>
                     )}
                 </div>
+                                                        
             </div>
         </div>
     );
 };
 
 export default StudentPage;
+
+
+
+
