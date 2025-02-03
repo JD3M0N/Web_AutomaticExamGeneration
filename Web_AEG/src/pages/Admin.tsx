@@ -384,7 +384,6 @@ const AdminPage = () => {
                     <button onClick={() => setActiveForm('topic')}>Añadir Topic</button>
                     <button onClick={() => setActiveForm('enroll')}>Asignar Estudiante a Asignatura</button>
                     <button onClick={() => setActiveForm('examStats')}>Ver Estadísticas de Exámenes</button>
-                    <button onClick={() => setActiveForm('compareExams')}>Comparar Exámenes</button>
                 </div>
                 <div className="form-container">
                     {notification && <Notification message={notification.message} type={notification.type} />}
