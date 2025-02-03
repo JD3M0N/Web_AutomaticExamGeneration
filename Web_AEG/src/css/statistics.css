@@ -3,19 +3,30 @@
     text-align: center;
 }
 
-.statistics-table {
-    margin-top: 1rem;
-    width: 100%;
-    border-collapse: collapse;
+.buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
 }
 
-.statistics-table th,
-.statistics-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-}
-
-.statistics-table th {
+button {
     background-color: #A51C30;
     color: white;
+    border: none;
+    padding: 1rem 2rem;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #8E1A28;
+}
+
+.statistics-page h1 {
+    color: black; /* Color negro para el título */
+    font-size: 2.5rem;
+    font-weight: bold;
 }
