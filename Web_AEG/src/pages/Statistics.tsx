@@ -62,6 +62,15 @@ const Statistics = () => {
         navigate(`/unused-questions`);
     };
 
+    // Redirigir a la página de preguntas más usadas
+    const goToMostUsedQuestionsPage = () => {
+        if (!selectedAssignment) {
+            alert('Por favor, selecciona una asignatura.');
+            return;
+        }
+        navigate(`/most-used-questions/${selectedAssignment}`);
+    };
+
     return (
         <div>
             <Navbar />
@@ -82,8 +91,17 @@ const Statistics = () => {
                         </select>
                     </div>
 
+                    <button onClick={goToMostUsedQuestionsPage}>Preguntas Más Usadas</button>
+                    <select id="assignment" value={selectedAssignment} onChange={handleAssignmentChange}>
+                        <option value="">-- Selecciona Asignatura --</option>
+                        {assignments.map((assignment) => (
+                            <option key={assignment.id} value={assignment.id}>
+                                {assignment.name}
+                            </option>
+                        ))}
+                    </select>
                     {/* Resto de botones sin selector */}
-                    <button>Preguntas Más Usadas</button>
+                    {/* <button>Preguntas Más Usadas</button> */}
                     <button>Exámenes Validados</button>
                     <button>Desempeño en Exámenes</button>
                     <button onClick={goToUnusedQuestionsPage}>Preguntas No Utilizadas</button>

@@ -618,14 +618,14 @@ const ProfessorPage = () => {
             return;
         }
         console.log("Actualizando pregunta:", selectedQuestionForUpdate);
-    
+
         // Clonar la pregunta y eliminar propiedades innecesarias
         const questionToUpdate = { ...selectedQuestionForUpdate };
         delete questionToUpdate.professor;
         delete questionToUpdate.exams;
         delete questionToUpdate.belongs;
         delete questionToUpdate.enters;
-    
+
         await updateQuestion(
             selectedQuestionForUpdate.id,
             questionToUpdate,
@@ -634,7 +634,13 @@ const ProfessorPage = () => {
         );
     };
 
-
+    const formatDate = (isoString: string) => {
+        const date = new Date(isoString);
+        const day = date.getDate();
+        const month = date.toLocaleString('es-ES', { month: 'long' });
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    };
 
 
     return (
@@ -677,8 +683,26 @@ const ProfessorPage = () => {
                                             <tr key={question.id}>
                                                 <td>{question.id}</td>
                                                 <td>{question.questionText}</td>
-                                                <td>{question.difficulty}</td>
-                                                <td>{question.type}</td>
+                                                <td>
+                                                    {question.difficulty === 1
+                                                        ? "Fácil"
+                                                        : question.difficulty === 2
+                                                            ? "Media"
+                                                            : question.difficulty === 3
+                                                                ? "Difícil"
+                                                                : question.difficulty}
+                                                </td>
+                                                <td>
+                                                    {question.type === "Essay"
+                                                        ? "Ensayo"
+                                                        : question.type === "MultipleChoice"
+                                                            ? "Opción Múltiple"
+                                                            : question.type === "TrueFalse"
+                                                                ? "Verdadero/False"
+                                                                : question.type === "essay"
+                                                                    ? "Ensayo"
+                                                                    : question.type}
+                                                </td>
                                                 <td>{question.topic?.name || 'Desconocido'}</td>
                                                 <td>
                                                     <button onClick={() => openUpdateQuestionModal(question)}>
@@ -694,6 +718,7 @@ const ProfessorPage = () => {
                             )}
                         </div>
                     )}
+
 
                     {showUpdateQuestionModal && selectedQuestionForUpdate && (
                         <div
@@ -861,7 +886,7 @@ const ProfessorPage = () => {
                                         <tr key={exam.id}>
                                             <td>{exam.professor?.email || 'Desconocido'}</td>
                                             <td>{exam.assignment?.name || 'Desconocido'}</td>
-                                            <td>{exam.date}</td>
+                                            <td>{formatDate(exam.date)}</td>
                                             <td>{exam.totalQuestions}</td>
                                             <td>{exam.difficulty}</td>
                                             <td>{exam.topicLimit}</td>
@@ -970,8 +995,30 @@ const ProfessorPage = () => {
                                         <tr key={question.id}>
                                             <td>{question.professor?.email || 'Desconocido'}</td>
                                             <td>{question.questionText}</td>
-                                            <td>{question.difficulty}</td>
-                                            <td>{question.type}</td>
+                                            <td>
+                                                {question.difficulty === 1
+                                                    ? "Fácil"
+                                                    : question.difficulty === 2
+                                                        ? "Media"
+                                                        : question.difficulty === 3
+                                                            ? "Difícil"
+                                                            : question.difficulty}
+                                            </td>
+                                            <td>
+                                                {question.type === "Essay"
+                                                    ? "Ensayo"
+                                                    : question.type === "MultipleChoice"
+                                                        ? "Opción Múltiple"
+                                                        : question.type === "TrueFalse"
+                                                            ? "Verdadero/False"
+                                                            : question.type == "essay"
+                                                                ? "Ensayo"
+                                                                : question.type == "multiplechoice"
+                                                                    ? "Opción Múltiple"
+                                                                    : question.type == "truefalse"
+                                                                        ? "Verdadero/Falso"
+                                                                        : question.type}
+                                            </td>
                                             <td>{question.topic?.name || 'Desconocido'}</td>
                                             <td>
                                                 <button
@@ -987,6 +1034,7 @@ const ProfessorPage = () => {
                             </table>
                         </div>
                     )}
+
 
                     {showQuestionModal && selectedQuestion && (
                         <div className="modal" style={{
@@ -1044,11 +1092,11 @@ const ProfessorPage = () => {
                                         }) => (
                                             <tr key={exam.id}>
                                                 <td>{exam.professor?.email || 'Desconocido'}</td>
-                                                <td>{exam.date}</td>
+                                                <td>{formatDate(exam.date)}</td>
                                                 <td>{exam.totalQuestions}</td>
                                                 <td>{exam.difficulty}</td>
                                                 <td>{exam.topicLimit}</td>
-                                                <td>{exam.state || 'Sin definir'}</td>
+                                                <td>{exam.state === "null" ? 'no revisado' : exam.state}</td>
                                                 <td>
                                                     <button
                                                         style={{

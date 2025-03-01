@@ -20,14 +20,14 @@ const StudentPage = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         console.log('Token en localStorage:', token);
-    
+
         if (token) {
             try {
                 const decoded: any = jwtDecode(token);
                 console.log('Token decodificado:', decoded);
-    
+
                 const studentIdFromToken = decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"];
-    
+
                 if (studentIdFromToken) {
                     console.log('Student ID extraído:', studentIdFromToken);
                     setStudentId(parseInt(studentIdFromToken));
@@ -41,7 +41,7 @@ const StudentPage = () => {
             console.error('No se encontró token en localStorage.');
         }
     }, []);
-    
+
 
     useEffect(() => {
         console.log('activeForm:', activeForm);
@@ -68,7 +68,7 @@ const StudentPage = () => {
                     'Content-Type': 'application/json',
                 },
             });
-    
+
             if (response.ok) {
                 const data = await response.json();
                 setQuestions(data.$values || []);
@@ -89,18 +89,18 @@ const StudentPage = () => {
             ...prev,
             [questionId]: value,
         }));
-    };    
-    
+    };
+
 
 
     const handleSubmitExam = async (e: React.FormEvent) => {
         e.preventDefault();
-    
+
         if (!selectedExam || !studentId) {
             alert("No se puede enviar el examen. Datos faltantes.");
             return;
         }
-    
+
         try {
             // Enviar cada respuesta de manera individual
             const promises = Object.entries(answers).map(async ([questionId, response]) => {
@@ -110,9 +110,9 @@ const StudentPage = () => {
                     questionId: Number(questionId),
                     answer: response,
                 };
-    
+
                 console.log("Enviando respuesta:", payload); // Debug
-    
+
                 const responseFetch = await fetch("http://localhost:5024/api/Response", {
                     method: "POST",
                     headers: {
@@ -121,28 +121,28 @@ const StudentPage = () => {
                     },
                     body: JSON.stringify(payload),
                 });
-    
+
                 if (!responseFetch.ok) {
                     console.error(`Error al enviar la respuesta de la pregunta ${questionId}:`, await responseFetch.json());
                 }
             });
-    
+
             await Promise.all(promises); // Esperar que todas las respuestas sean enviadas
-    
+
             alert("Examen enviado con éxito.");
             setActiveForm("accessExams"); // Regresar a la lista de exámenes
         } catch (error) {
             console.error("Error al conectar con el servidor:", error);
         }
-    }; 
-    
-    
+    };
+
+
     const fetchStudentGrades = async () => {
         if (!studentId) {
             console.error("No se encontró studentId.");
             return;
         }
-    
+
         try {
             const response = await fetch(`http://localhost:5024/api/Grade/student/${studentId}/graded-exams`, {
                 method: "GET",
@@ -151,21 +151,61 @@ const StudentPage = () => {
                     "Content-Type": "application/json",
                 },
             });
-    
+
             if (response.ok) {
                 const data = await response.json();
                 console.log("Notas recibidas:", data);
-    
-                setGrades(data.$values || []); // Almacena las calificaciones
-                setActiveForm("viewGrades"); // Cambia la vista a la tabla de calificaciones
+
+                const gradesList = data.$values || [];
+
+                // Enriquecemos cada calificación con datos del examen y asignatura
+                const enrichedGrades = await Promise.all(gradesList.map(async (grade: { examId: number, grade: number }) => {
+                    // Obtener datos del examen
+                    const examResponse = await fetch(`http://localhost:5024/api/Exam/${grade.examId}`, {
+                        method: "GET",
+                        headers: {
+                            "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+                    const examData = await examResponse.json();
+
+                    // Obtener datos de la asignatura
+                    const assignmentResponse = await fetch(`http://localhost:5024/api/Assignment/${examData.assignmentId}`, {
+                        method: "GET",
+                        headers: {
+                            "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                            "Content-Type": "application/json",
+                        },
+                    });
+                    const assignmentData = await assignmentResponse.json();
+
+                    return {
+                        ...grade,
+                        examDate: examData.date,
+                        assignmentName: assignmentData.name
+                    };
+                }));
+
+                setGrades(enrichedGrades);
+                setActiveForm("viewGrades");
             } else {
                 console.error("Error al obtener calificaciones:", await response.json());
             }
         } catch (error) {
             console.error("Error al conectar con el servidor:", error);
         }
-    };    
+    };
 
+
+
+    const formatDate = (isoString: string) => {
+        const date = new Date(isoString);
+        const day = date.getDate();
+        const month = date.toLocaleString('es-ES', { month: 'long' });
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+    };
 
     return (
         <div className="student-page">
@@ -184,7 +224,7 @@ const StudentPage = () => {
                                 {questions.map((question, index) => (
                                     <div key={index} className="question-block">
                                         <p>{question.questionText}</p>
-                                        
+
                                         {question.type === 'MultipleChoice' && (
                                             <div>
                                                 {question.options.map((option: string, i: number) => (
@@ -272,7 +312,7 @@ const StudentPage = () => {
                                     <tbody>
                                         {exams.map((exam: { id: number, date: string, totalQuestions: number }) => (
                                             <tr key={exam.id}>
-                                                <td>{exam.date}</td>
+                                                <td>{formatDate(exam.date)}</td>
                                                 <td>{exam.totalQuestions}</td>
                                                 <td>
                                                     <button onClick={() => handleTakeExam(exam.id)}>Realizar Examen</button>
@@ -294,14 +334,16 @@ const StudentPage = () => {
                                 <table>
                                     <thead>
                                         <tr>
-                                            <th>Exam ID</th>
-                                            <th>Grade</th>
+                                            <th>Examen</th>
+                                            <th>Nota</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {grades.map((grade, index) => (
                                             <tr key={index}>
-                                                <td>{grade.examId}</td>
+                                                <td>
+                                                    Examen de {grade.assignmentName} del dia {formatDate(grade.examDate)}
+                                                </td>
                                                 <td>{grade.grade}</td>
                                             </tr>
                                         ))}
@@ -314,7 +356,7 @@ const StudentPage = () => {
                     )}
 
                 </div>
-                                                        
+
             </div>
         </div>
     );

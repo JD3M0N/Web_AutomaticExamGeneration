@@ -1,25 +1,27 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
-import '../css/unusedQuestions.css';
+import '../css/mostUsedQuestions.css';
 
-const UnusedQuestionsPage = () => {
-    const [unusedQuestions, setUnusedQuestions] = useState([]);
+const MostUsedQuestionsPage = () => {
+    const { assignmentId } = useParams();
+    const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('http://localhost:5024/api/Stats/unused-questions')
+        fetch(`http://localhost:5024/api/Stats/most-used-questions/${assignmentId}`)
             .then(response => response.json())
             .then(data => {
-                setUnusedQuestions(data.$values ?? []);
+                setQuestions(data.$values ?? []);
                 setLoading(false);
             })
             .catch(error => {
-                console.error("Error al obtener preguntas no utilizadas:", error);
+                console.error('Error al obtener preguntas más usadas:', error);
                 setLoading(false);
             });
-    }, []);
+    }, [assignmentId]);
 
     // Función para convertir la dificultad numérica a texto
     const getDifficultyLabel = (difficulty: number) => {
@@ -38,18 +40,18 @@ const UnusedQuestionsPage = () => {
     // Función para generar y descargar el PDF
     const downloadPDF = () => {
         const doc = new jsPDF();
-        doc.text("Preguntas No Utilizadas", 14, 10);
+        doc.text("Preguntas Más Usadas", 14, 10);
 
-        const tableColumn = ["ID", "Pregunta", "Dificultad", "Tema", "Profesor"];
+        const tableColumn = ["ID", "Pregunta", "Dificultad", "Tema", "Usos"];
         const tableRows = [];
 
-        unusedQuestions.forEach((question: any) => {
+        questions.forEach((question: any) => {
             const rowData = [
                 question.questionId,
                 question.questionText,
                 getDifficultyLabel(question.difficulty),
                 question.topicName,
-                question.professorName
+                question.usageCount
             ];
             tableRows.push(rowData);
         });
@@ -60,14 +62,14 @@ const UnusedQuestionsPage = () => {
             startY: 20,
         });
 
-        doc.save("preguntas_no_utilizadas.pdf");
+        doc.save("preguntas_mas_usadas.pdf");
     };
 
     return (
         <div>
             <Navbar />
-            <div className="unused-questions-page">
-                <h1>Preguntas No Utilizadas en los Últimos 2 Años</h1>
+            <div className="most-used-questions-page">
+                <h1>Preguntas Más Usadas en Exámenes Finales</h1>
 
                 <button className="download-pdf-button" onClick={downloadPDF}>
                     Descargar PDF
@@ -76,24 +78,24 @@ const UnusedQuestionsPage = () => {
                 {loading ? (
                     <p>Cargando datos...</p>
                 ) : (
-                    <table className="unused-questions-table">
+                    <table className="most-used-questions-table">
                         <thead>
                             <tr>
                                 <th>ID</th>
                                 <th>Texto de la pregunta</th>
                                 <th>Dificultad</th>
                                 <th>Tema</th>
-                                <th>Profesor</th>
+                                <th>Veces Usada</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {unusedQuestions.map((question: any, index: number) => (
+                            {questions.map((question: any, index: number) => (
                                 <tr key={index}>
                                     <td>{question.questionId}</td>
                                     <td>{question.questionText}</td>
                                     <td>{getDifficultyLabel(question.difficulty)}</td>
                                     <td>{question.topicName}</td>
-                                    <td>{question.professorName}</td>
+                                    <td>{question.usageCount}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -104,4 +106,4 @@ const UnusedQuestionsPage = () => {
     );
 };
 
-export default UnusedQuestionsPage;
+export default MostUsedQuestionsPage;

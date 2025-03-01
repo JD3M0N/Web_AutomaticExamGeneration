@@ -740,7 +740,7 @@ const AdminPage = () => {
                                     ))}
                                 </select>
                             </div>
-                            <button type="submit">Asignar Teach</button>
+                            <button type="submit">Agregar relación profesor-asignatura</button>
                         </form>
                     )}
                     {activeForm === 'topic' && (

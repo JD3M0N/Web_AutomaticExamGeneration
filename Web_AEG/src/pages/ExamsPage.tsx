@@ -38,7 +38,7 @@ const ExamsPage = () => {
                 new Date(exam.creationDate).toLocaleDateString(),
                 exam.totalQuestions,
                 exam.difficulty,
-                exam.state || 'Pendiente'
+                translateState(exam.state)
             ];
             tableRows.push(rowData);
         });
@@ -51,6 +51,14 @@ const ExamsPage = () => {
 
         doc.save("examenes_generados.pdf");
     };
+
+    const translateState = (state: string) => {
+        if (state === 'validated') return 'validado';
+        if (state === 'null') return 'pendiente';
+        if (state === 'denied') return 'invalidado';
+        return state || 'pendiente';
+    }
+
 
     return (
         <div>
@@ -84,7 +92,7 @@ const ExamsPage = () => {
                                     <td>{new Date(exam.creationDate).toLocaleDateString()}</td>
                                     <td>{exam.totalQuestions}</td>
                                     <td>{exam.difficulty}</td>
-                                    <td>{exam.state || 'Pendiente'}</td>
+                                    <td>{translateState(exam.state)}</td>
                                 </tr>
                             ))}
                         </tbody>

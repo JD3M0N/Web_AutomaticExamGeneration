@@ -61,7 +61,7 @@ const Navbar = () => {
                             onClick={handleLoginClick}
                             className={location.pathname === '/login' ? 'active' : ''}
                         >
-                            Login
+                            Registrarse
                         </a>
                     </li>
                 </ul>

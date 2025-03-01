@@ -11,6 +11,7 @@ import ExamsPage from './pages/ExamsPage';
 import CompareExamsPage from './pages/CompareExamsPage';
 import ProfessorReviewsPage from './pages/ProfessorReviewsPage';
 import UnusedQuestionsPage from './pages/UnusedQuestionsPage';
+import MostUsedQuestionsPage from './pages/MostUsedQuestionsPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -36,6 +37,8 @@ function App() {
           <Route path="/professor-reviews" element={<ProfessorReviewsPage />} />
 
           <Route path="/unused-questions" element={<UnusedQuestionsPage />} />
+
+          <Route path="/most-used-questions/:assignmentId" element={<MostUsedQuestionsPage />} />
 
           {/* Rutas protegidas */}
           <Route

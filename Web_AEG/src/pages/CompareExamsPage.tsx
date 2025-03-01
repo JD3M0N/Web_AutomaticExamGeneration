@@ -30,7 +30,9 @@ const CompareExamsPage = () => {
         const tableRows = [];
 
         examComparisons.forEach((exam: any) => {
+            // Filtrar la clave "$id" de la distribución de temas
             const topicDistribution = Object.entries(exam.topicDistribution)
+                .filter(([topic]) => topic !== "$id")
                 .map(([topic, percentage]) => `${topic}: ${percentage}%`)
                 .join(", ");
 
@@ -77,9 +79,13 @@ const CompareExamsPage = () => {
                                 <tr key={index}>
                                     <td>{exam.assignmentName}</td>
                                     <td>
-                                        {Object.entries(exam.topicDistribution).map(([topic, percentage]: any) => (
-                                            <div key={topic}>{topic}: {percentage}%</div>
-                                        ))}
+                                        {Object.entries(exam.topicDistribution)
+                                            .filter(([topic]) => topic !== "$id")
+                                            .map(([topic, percentage]: any) => (
+                                                <div key={topic}>
+                                                    {topic}: {percentage}%
+                                                </div>
+                                            ))}
                                     </td>
                                     <td>{exam.averageDifficulty.toFixed(2)}</td>
                                 </tr>
