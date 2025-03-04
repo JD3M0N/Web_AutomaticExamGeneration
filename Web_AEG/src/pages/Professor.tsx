@@ -35,6 +35,7 @@ const ProfessorPage = () => {
         { topicId: '', difficulty: '' },
     ]);
     const [unvalidatedExams, setUnvalidatedExams] = useState<any[]>([]);
+    const [grades, setGrades] = useState<{ [key: string]: number }>({});
 
     const handleViewExamsSelect = async (assignmentId: number) => {
         setSelectedAssignment(assignmentId);
@@ -461,39 +462,60 @@ const ProfessorPage = () => {
                     },
                 }
             );
+
             if (response.ok) {
                 const data = await response.json();
                 const exams: any[] = data.$values || [];
-                // Para cada examen, se consulta el endpoint para obtener el nombre de la asignatura
+
+                // Enriquecer cada examen con datos adicionales
                 const updatedExams = await Promise.all(
                     exams.map(async (exam) => {
-                        if (exam.assignmentId && !exam.assignmentName) {
-                            try {
-                                const assignResponse = await fetch(
-                                    `http://localhost:5024/api/Assignment/${exam.assignmentId}`,
-                                    {
-                                        method: 'GET',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                                        },
-                                    }
-                                );
-                                if (assignResponse.ok) {
-                                    const assignData = await assignResponse.json();
-                                    // Ajusta el nombre del campo según la respuesta de la API.
-                                    exam.assignmentName = assignData.name || assignData.assignmentName;
+                        try {
+                            // 1. Obtener detalles completos del examen
+                            const examResponse = await fetch(
+                                `http://localhost:5024/api/Exam/${exam.examId}`,
+                                {
+                                    method: 'GET',
+                                    headers: {
+                                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                    },
                                 }
-                            } catch (error) {
-                                console.error('Error fetching assignment:', error);
+                            );
+
+                            if (examResponse.ok) {
+                                const examData = await examResponse.json();
+
+                                // 2. Obtener nombre de la asignatura
+                                if (examData.assignmentId) {
+                                    const assignResponse = await fetch(
+                                        `http://localhost:5024/api/Assignment/${examData.assignmentId}`,
+                                        {
+                                            method: 'GET',
+                                            headers: {
+                                                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                                            },
+                                        }
+                                    );
+
+                                    if (assignResponse.ok) {
+                                        const assignData = await assignResponse.json();
+                                        return {
+                                            ...exam,
+                                            id: examData.id,
+                                            assignmentName: assignData.name,
+                                            date: examData.date
+                                        };
+                                    }
+                                }
                             }
+                        } catch (error) {
+                            console.error('Error obteniendo detalles:', error);
                         }
                         return exam;
                     })
                 );
+
                 setReviewableExams(updatedExams);
-            } else {
-                console.error('Error al obtener los exámenes para calificar');
             }
         } catch (error) {
             console.error('Error fetching reviewable exams:', error);
@@ -508,30 +530,26 @@ const ProfessorPage = () => {
     }, [activeForm]);
 
     // Función para abrir el modal de calificación de examenes
-    const handleOpenGradeModal = async (examId: number) => {
+    const handleOpenGradeModal = async (examId: number, studentId: number) => {
         try {
-            // Suponiendo que existe un endpoint para obtener las respuestas del examen,
-            // ajusta la URL según corresponda.
             const response = await fetch(
-                `http://localhost:5024/api/Exam/${examId}/responses`,
+                `http://localhost:5024/api/Response/exam/${examId}/student/${studentId}`,
                 {
                     method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json',
                         'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     },
                 }
             );
+
             if (response.ok) {
                 const data = await response.json();
                 setExamResponses(data.$values || []);
                 setSelectedExamToGrade(examId);
                 setShowGradeModal(true);
-            } else {
-                console.error('Error al obtener las respuestas del examen');
             }
         } catch (error) {
-            console.error('Error fetching exam responses:', error);
+            console.error('Error fetching responses:', error);
         }
     };
 
@@ -632,6 +650,49 @@ const ProfessorPage = () => {
             handleFetchMyQuestions,
             setNotification
         );
+    };
+
+    const handleSubmitGrades = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!professorId || !selectedExamToGrade) {
+            setNotification({ message: "Error de autenticación", type: "error" });
+            return;
+        }
+
+        try {
+            const gradeRequests = examResponses.map((resp: any) => {
+                const gradeValue = grades[resp.questionId];
+
+                return fetch('http://localhost:5024/api/Grade', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    },
+                    body: JSON.stringify({
+                        professorId: professorId,
+                        studentId: resp.studentId,
+                        questionId: resp.questionId,
+                        examId: selectedExamToGrade,
+                        gradeValue: gradeValue || 0
+                    })
+                });
+            });
+
+            const results = await Promise.all(gradeRequests);
+            const allSuccess = results.every(res => res.ok);
+
+            if (allSuccess) {
+                setNotification({ message: "Calificaciones guardadas exitosamente", type: "success" });
+                setShowGradeModal(false);
+                setGrades({});
+            } else {
+                setNotification({ message: "Error al guardar algunas calificaciones", type: "error" });
+            }
+        } catch (error) {
+            setNotification({ message: "Error de conexión con el servidor", type: "error" });
+        }
     };
 
     const formatDate = (isoString: string) => {
@@ -813,10 +874,11 @@ const ProfessorPage = () => {
                                         {reviewableExams.map((exam: any) => (
                                             <tr key={exam.id}>
                                                 <td>{exam.id}</td>
-                                                <td>{exam.assignmentName || exam.assignment?.name}</td>
+                                                <td>{exam.assignmentName || 'Desconocido'}</td>
                                                 <td>{new Date(exam.date).toLocaleDateString()}</td>
+                                                // En la renderización de la tabla de reviewableExams
                                                 <td>
-                                                    <button onClick={() => handleOpenGradeModal(exam.id)}>
+                                                    <button onClick={() => handleOpenGradeModal(exam.examId, exam.studentId)}>
                                                         Calificar
                                                     </button>
                                                 </td>
@@ -831,40 +893,48 @@ const ProfessorPage = () => {
                     )}
 
                     {showGradeModal && (
-                        <div className="modal" style={{
-                            position: 'fixed',
-                            top: 0,
-                            left: 0,
-                            width: '100%',
-                            height: '100%',
-                            background: 'rgba(0,0,0,0.5)',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            zIndex: 1000
-                        }}>
-                            <div className="modal-content" style={{
-                                background: '#fff',
-                                padding: '2rem',
-                                borderRadius: '8px',
-                                maxWidth: '600px',
-                                width: '90%'
-                            }}>
-                                <h2>Respuestas del Examen {selectedExamToGrade}</h2>
-                                <ul>
-                                    {examResponses.map((resp: any) => (
-                                        <li key={resp.questionId}>
-                                            <strong>{resp.questionText}</strong>: {resp.answer}
-                                        </li>
-                                    ))}
-                                </ul>
-                                <button onClick={() => {
-                                    setShowGradeModal(false);
-                                    setExamResponses([]);
-                                    setSelectedExamToGrade(null);
-                                }}>
-                                    Cerrar
-                                </button>
+                        <div className="modal" style={{/* estilos existentes */ }}>
+                            <div className="modal-content" style={{/* estilos existentes */ }}>
+                                <h2>Calificar Examen {selectedExamToGrade}</h2>
+                                <form onSubmit={handleSubmitGrades}>
+                                    <ul>
+                                        {examResponses.map((resp: any) => (
+                                            <li key={resp.questionId} style={{ marginBottom: '1rem' }}>
+                                                <div>
+                                                    <strong>Pregunta {resp.questionId}:</strong>
+                                                    <p>{resp.answer}</p>
+                                                    <input
+                                                        type="number"
+                                                        min="0"
+                                                        max="10"
+                                                        placeholder="Nota (0-10)"
+                                                        value={grades[resp.questionId] || ''}
+                                                        onChange={(e) => setGrades(prev => ({
+                                                            ...prev,
+                                                            [resp.questionId]: Number(e.target.value)
+                                                        }))}
+                                                        style={{ marginLeft: '1rem' }}
+                                                    />
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                    <div style={{ display: 'flex', gap: '1rem' }}>
+                                        <button type="submit" className="submit-button">
+                                            Guardar Calificaciones
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setShowGradeModal(false);
+                                                setExamResponses([]);
+                                                setGrades({});
+                                            }}
+                                        >
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     )}
